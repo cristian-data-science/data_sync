@@ -191,11 +191,11 @@ export default function QueryLogModule() {
       <Box bg={cardBg} borderRadius="2xl" shadow="md" p={6} borderWidth="1px" borderColor={useColorModeValue('gray.100','gray.700')}>
         <Stack direction={{ base: 'column', md: 'row' }} spacing={4} align="start">
           <InputGroup maxW="320px">
-            <InputLeftAddon fontWeight="semibold" bg="gray.50">SalesId</InputLeftAddon>
+            <InputLeftAddon fontWeight="semibold" bg={useColorModeValue('gray.50', 'gray.700')} color={textPrimary}>SalesId</InputLeftAddon>
             <Input placeholder="PAT-000000" value={formFilters.salesId} onChange={(event) => setFormFilters((prev) => ({ ...prev, salesId: event.target.value }))} />
           </InputGroup>
           <InputGroup maxW="220px">
-            <InputLeftAddon fontWeight="semibold" bg="gray.50">Tipo</InputLeftAddon>
+            <InputLeftAddon fontWeight="semibold" bg={useColorModeValue('gray.50', 'gray.700')} color={textPrimary}>Tipo</InputLeftAddon>
             <Select value={formFilters.actionType} onChange={(event) => setFormFilters((prev) => ({ ...prev, actionType: event.target.value }))}>
               <option value="">Todos</option>
               <option value="sql">SQL ejecutado</option>

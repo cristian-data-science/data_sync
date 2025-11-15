@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { Buffer } from 'buffer';
 
 /**
  * API endpoint para autenticación de usuarios
