@@ -244,7 +244,7 @@ export default function DataCorrectionModule({ salesId: initialSalesId = '', onP
         </HStack>
         <Stack direction={{ base: 'column', md: 'row' }} spacing={4} mt={6}>
           <InputGroup maxW="360px">
-            <InputLeftAddon bg="gray.50" fontWeight="semibold">SalesId</InputLeftAddon>
+            <InputLeftAddon bg={useColorModeValue('gray.50', 'gray.700')} color={textPrimary} fontWeight="semibold">SalesId</InputLeftAddon>
             <Input placeholder="PAT-000000" value={salesId} onChange={(event) => setSalesId(event.target.value)} autoFocus />
           </InputGroup>
           <HStack spacing={3}>
@@ -316,17 +316,17 @@ export default function DataCorrectionModule({ salesId: initialSalesId = '', onP
               return (
                 <AccordionItem key={section.key} border="none">
                   <h2>
-                    <AccordionButton _expanded={{ bg: `${section.color}.50` }} px={6} py={4}>
+                    <AccordionButton _expanded={{ bg: useColorModeValue(`${section.color}.50`, `${section.color}.900`) }} px={6} py={4}>
                       <Box flex="1" textAlign="left">
-                        <Heading size="sm" color={`${section.color}.600`}>{section.title}</Heading>
-                        {!hasItems && <Text fontSize="xs" color="gray.500" mt={1}>No se sugiere esta sección</Text>}
-                        {hasItems && !actionableCount && <Text fontSize="xs" color="gray.500" mt={1}>Sin scripts ejecutables (solo avisos)</Text>}
+                        <Heading size="sm" color={useColorModeValue(`${section.color}.600`, `${section.color}.200`)}>{section.title}</Heading>
+                        {!hasItems && <Text fontSize="xs" color={textMuted} mt={1}>No se sugiere esta sección</Text>}
+                        {hasItems && !actionableCount && <Text fontSize="xs" color={textMuted} mt={1}>Sin scripts ejecutables (solo avisos)</Text>}
                       </Box>
                       <Badge colorScheme={badgeColor} mr={3}>{badgeLabel}</Badge>
-                      <AccordionIcon />
+                      <AccordionIcon color={textPrimary} />
                     </AccordionButton>
                   </h2>
-                  <AccordionPanel px={6} pb={6}>
+                  <AccordionPanel px={6} pb={6} bg={useColorModeValue('white', 'gray.800')}>
                     {hasItems ? (
                       <VStack align="stretch" spacing={4}>
                         <Divider />
@@ -348,8 +348,8 @@ export default function DataCorrectionModule({ salesId: initialSalesId = '', onP
                         ))}
                       </VStack>
                     ) : (
-                      <Box borderWidth="1px" borderRadius="lg" p={4} bg="gray.50">
-                        <Text fontSize="sm" color="gray.600">No hay acciones recomendadas para esta sección.</Text>
+                      <Box borderWidth="1px" borderRadius="lg" p={4} bg={subtleBg}>
+                        <Text fontSize="sm" color={textSecondary}>No hay acciones recomendadas para esta sección.</Text>
                       </Box>
                     )}
                   </AccordionPanel>
@@ -447,50 +447,56 @@ function StatementCard({ title, badge, statement, toast, activeSalesId, onExecut
   const previewSummaryEntries = useSummaryPreview ? buildPreviewSummaryEntries(statement, activeSalesId) : [];
   const previewWarning = typeof statement.preview?.warning === 'string' ? statement.preview.warning : null;
 
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const textPrimary = useColorModeValue('gray.800', 'gray.100');
+  const textMuted = useColorModeValue('gray.500', 'gray.400');
+  const textSecondary = useColorModeValue('gray.600', 'gray.300');
+  const subtleBg = useColorModeValue('gray.50', 'gray.700');
+
   return (
-    <Box borderWidth="1px" borderRadius="xl" p={5} shadow="sm" bg="white">
+    <Box borderWidth="1px" borderRadius="xl" p={5} shadow="sm" bg={cardBg}>
       <HStack justify="space-between" align="start">
         <Box>
-          <Heading size="sm" color="gray.800">{title}</Heading>
-          <Text fontSize="xs" color="gray.500" mt={1}>Línea {statement.lineNumber ?? '—'}</Text>
+          <Heading size="sm" color={textPrimary}>{title}</Heading>
+          <Text fontSize="xs" color={textMuted} mt={1}>Línea {statement.lineNumber ?? '—'}</Text>
         </Box>
         <Badge colorScheme={badge.color} variant="subtle">{badge.label}</Badge>
       </HStack>
       <VStack align="stretch" spacing={4} mt={4} fontSize="xs">
         <Box>
           <HStack justify="space-between" mb={2}>
-            <Text fontWeight="semibold" color="gray.600">SQL sugerido</Text>
+            <Text fontWeight="semibold" color={textSecondary}>SQL sugerido</Text>
             <IconButton size="sm" aria-label="Copiar SQL" icon={<HiClipboardCopy />} variant="ghost" onClick={() => copyText(statement.sql, toast)} />
           </HStack>
-          <Code w="full" whiteSpace="pre-wrap" fontSize="xs" p={3} borderRadius="md" bg="gray.900" color="green.200">{statement.sql}</Code>
+          <Code w="full" whiteSpace="pre-wrap" fontSize="xs" p={3} borderRadius="md" bg={useColorModeValue('gray.900','gray.900')} color={useColorModeValue('green.200','green.200')}>{statement.sql}</Code>
         </Box>
         <Alert status="warning" variant="subtle" borderRadius="md">
           <AlertIcon />
-          <Text fontSize="xs" color="gray.700">{mainSummary}</Text>
+          <Text fontSize="xs">{mainSummary}</Text>
         </Alert>
         <Box>
           <HStack justify="space-between" mb={2}>
-            <Text fontWeight="semibold" color="gray.600">Rollback puntual</Text>
+            <Text fontWeight="semibold" color={textSecondary}>Rollback puntual</Text>
             <IconButton size="sm" aria-label="Copiar rollback" icon={<HiClipboardCopy />} variant="ghost" onClick={() => copyText(statement.rollbackSql, toast)} />
           </HStack>
-          <Code w="full" whiteSpace="pre-wrap" fontSize="xs" p={3} borderRadius="md" bg="gray.800" color="orange.200">{statement.rollbackSql}</Code>
+          <Code w="full" whiteSpace="pre-wrap" fontSize="xs" p={3} borderRadius="md" bg={useColorModeValue('gray.800','gray.800')} color={useColorModeValue('orange.200','orange.200')}>{statement.rollbackSql}</Code>
         </Box>
         {rollbackSummary && (
           <Alert status="info" variant="subtle" borderRadius="md">
             <AlertIcon />
-            <Text fontSize="xs" color="gray.700">{rollbackSummary}</Text>
+            <Text fontSize="xs">{rollbackSummary}</Text>
           </Alert>
         )}
         {statement.preview && (
-          <Box borderWidth="1px" borderRadius="lg" p={3} bg="gray.50">
-            <Text fontSize="xs" fontWeight="bold" color="gray.600" mb={2}>Vista previa</Text>
+          <Box borderWidth="1px" borderRadius="lg" p={3} bg={subtleBg}>
+            <Text fontSize="xs" fontWeight="bold" color={textSecondary} mb={2}>Vista previa</Text>
             {useSummaryPreview ? (
               <>
                 <Grid templateColumns="repeat(auto-fit, minmax(150px, 1fr))" gap={3} fontSize="xs">
                   {previewSummaryEntries.map((entry) => (
                     <GridItem key={entry.label}>
-                      <Text textTransform="uppercase" fontSize="10px" color="gray.500">{entry.label}</Text>
-                      <Text color="gray.700" fontWeight="semibold">{entry.value}</Text>
+                      <Text textTransform="uppercase" fontSize="10px" color={textMuted}>{entry.label}</Text>
+                      <Text color={textPrimary} fontWeight="semibold">{entry.value}</Text>
                     </GridItem>
                   ))}
                 </Grid>
@@ -503,11 +509,11 @@ function StatementCard({ title, badge, statement, toast, activeSalesId, onExecut
                   const isMultiline = formattedValue.includes('\n') || formattedValue.length > 50;
                   return (
                     <GridItem key={key}>
-                      <Text textTransform="uppercase" fontSize="10px" color="gray.500">{key}</Text>
+                      <Text textTransform="uppercase" fontSize="10px" color={textMuted}>{key}</Text>
                       {isMultiline ? (
-                        <Code display="block" whiteSpace="pre-wrap" fontSize="xs" p={2} borderRadius="md" bg="gray.900" color="blue.100">{formattedValue}</Code>
+                        <Code display="block" whiteSpace="pre-wrap" fontSize="xs" p={2} borderRadius="md" bg={useColorModeValue('gray.900','gray.900')} color={useColorModeValue('blue.100','blue.100')}>{formattedValue}</Code>
                       ) : (
-                        <Text color="gray.700" fontWeight="semibold">{formattedValue}</Text>
+                        <Text color={textPrimary} fontWeight="semibold">{formattedValue}</Text>
                       )}
                     </GridItem>
                   );

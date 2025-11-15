@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Heading, Text, Button, HStack, VStack, Flex, Badge, useColorModeValue } from '@chakra-ui/react';
+import { Box, Heading, Text, Button, HStack, VStack, Flex, Badge, useColorModeValue, IconButton, Menu, MenuButton, MenuList, MenuItem, MenuDivider, Avatar, useToast } from '@chakra-ui/react';
 import {
   HiChartBar,
   HiPencilAlt,
@@ -7,16 +7,21 @@ import {
   HiChartPie,
   HiDatabase,
   HiClipboardList,
+  HiLogout,
+  HiUser,
 } from 'react-icons/hi';
 import ODataModule from '../components/ODataModule';
 import SnowflakeModule from '../components/SnowflakeModule';
 import DataCorrectionModule from '../components/DataCorrectionModule';
 import QueryLogModule from '../components/QueryLogModule';
 import ModeToggle from '../components/ModeToggle';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function IndexPage() {
   const [activeModule, setActiveModule] = useState('odata-monitor');
   const [correctionContext, setCorrectionContext] = useState(null);
+  const { user, logout } = useAuth();
+  const toast = useToast();
 
   const modules = [
     {
@@ -65,6 +70,17 @@ export default function IndexPage() {
   const textPrimary = useColorModeValue('gray.800', 'gray.100');
   const textSecondary = useColorModeValue('gray.500', 'gray.400');
 
+  const handleLogout = () => {
+    logout();
+    toast({
+      title: 'Sesión cerrada',
+      description: 'Has cerrado sesión correctamente',
+      status: 'info',
+      duration: 3000,
+      isClosable: true,
+    });
+  };
+
   return (
     <Flex h="100vh" bg={bgApp}>
       <Box w="280px" bg={bgSidebar} borderRightWidth="1px" borderColor={borderCol} shadow="sm">
@@ -94,6 +110,12 @@ export default function IndexPage() {
                 const Icon = module.icon;
                 const isActive = activeModule === module.id;
                 const isEnabled = !module.disabled;
+                const activeBg = useColorModeValue(`${module.color}.50`, `${module.color}.900`);
+                const activeColor = useColorModeValue(`${module.color}.700`, `${module.color}.200`);
+                const activeBorder = useColorModeValue(`${module.color}.200`, `${module.color}.600`);
+                const hoverBg = useColorModeValue(isActive ? `${module.color}.100` : 'gray.50', isActive ? `${module.color}.800` : 'gray.700');
+                const iconBg = useColorModeValue(isActive ? `${module.color}.100` : 'gray.100', isActive ? `${module.color}.700` : 'gray.600');
+                const inactiveColor = useColorModeValue('gray.700', 'gray.300');
                 return (
                   <Button
                     key={module.id}
@@ -103,22 +125,22 @@ export default function IndexPage() {
                     h="auto"
                     py={3}
                     px={4}
-                    bg={isActive ? `${module.color}.50` : 'transparent'}
-                    color={isActive ? `${module.color}.700` : 'gray.700'}
+                    bg={isActive ? activeBg : 'transparent'}
+                    color={isActive ? activeColor : inactiveColor}
                     borderRadius="xl"
                     border="2px solid"
-                    borderColor={isActive ? `${module.color}.200` : 'transparent'}
-                    _hover={{ bg: isEnabled ? (isActive ? `${module.color}.100` : 'gray.50') : 'transparent', transform: isEnabled ? 'translateX(2px)' : 'none' }}
+                    borderColor={isActive ? activeBorder : 'transparent'}
+                    _hover={{ bg: isEnabled ? hoverBg : 'transparent', transform: isEnabled ? 'translateX(2px)' : 'none' }}
                     transition="all 0.2s"
                     cursor={isEnabled ? 'pointer' : 'not-allowed'}
                     opacity={isEnabled ? 1 : 0.5}
                  >
                     <HStack spacing={3} w="full">
-                      <Box p={2} bg={isActive ? `${module.color}.100` : 'gray.100'} borderRadius="lg">
+                      <Box p={2} bg={iconBg} borderRadius="lg">
                         <Icon size={18} color={isActive ? undefined : '#718096'} />
                       </Box>
                       <VStack align="start" spacing={0} flex={1}>
-                        <Text fontSize="sm" fontWeight="semibold" color={textPrimary}>
+                        <Text fontSize="sm" fontWeight="semibold">
                           {module.name}
                         </Text>
                         <Text fontSize="xs" color={textSecondary}>
@@ -159,7 +181,30 @@ export default function IndexPage() {
                 {activeModule === 'query-logs' && 'Logs ejecutados + Rollback directo'}
               </Text>
             </VStack>
-            <ModeToggle />
+            <HStack spacing={3}>
+              <ModeToggle />
+              <Menu>
+                <MenuButton
+                  as={Button}
+                  variant="ghost"
+                  leftIcon={<Avatar size="xs" name={user?.name} bg="brand.500" />}
+                  rightIcon={<HiUser />}
+                  size="sm"
+                  _hover={{ bg: useColorModeValue('gray.100', 'gray.700') }}
+                >
+                  {user?.name}
+                </MenuButton>
+                <MenuList>
+                  <MenuItem icon={<HiUser />} isDisabled>
+                    {user?.email}
+                  </MenuItem>
+                  <MenuDivider />
+                  <MenuItem icon={<HiLogout />} onClick={handleLogout} color="red.500">
+                    Cerrar Sesión
+                  </MenuItem>
+                </MenuList>
+              </Menu>
+            </HStack>
           </HStack>
         </Box>
 

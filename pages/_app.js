@@ -1,6 +1,8 @@
 import React from 'react';
 import { ChakraProvider, extendTheme } from '@chakra-ui/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from '../contexts/AuthContext';
+import ProtectedRoute from '../components/ProtectedRoute';
 
 const theme = extendTheme({
   config: {
@@ -40,11 +42,24 @@ const queryClient = new QueryClient({
   },
 });
 
-export default function App({ Component, pageProps }) {
+// Páginas públicas que no requieren autenticación
+const publicPages = ['/login'];
+
+export default function App({ Component, pageProps, router }) {
+  const isPublicPage = publicPages.includes(router.pathname);
+
   return (
     <ChakraProvider theme={theme}>
       <QueryClientProvider client={queryClient}>
-        <Component {...pageProps} />
+        <AuthProvider>
+          {isPublicPage ? (
+            <Component {...pageProps} />
+          ) : (
+            <ProtectedRoute>
+              <Component {...pageProps} />
+            </ProtectedRoute>
+          )}
+        </AuthProvider>
       </QueryClientProvider>
     </ChakraProvider>
   );
