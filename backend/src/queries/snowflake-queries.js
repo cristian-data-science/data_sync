@@ -1,5 +1,14 @@
 import { PROCESSED_SALESLINE_TABLE } from '../constants/tables.js';
 
+const DEFAULT_DATE_FROM = '2020-01-01';
+const VIEW_LINE_TABLE = 'PATAGONIA.CORE_TEST.VW_VENTA_COSTO_LINEAS_TEST';
+
+const getYesterdayISO = () => {
+  const date = new Date();
+  date.setDate(date.getDate() - 1);
+  return date.toISOString().slice(0, 10);
+};
+
 /**
  * Snowflake Queries - Comparación de ventas y costos
  * Autor: Sistema de Monitoreo D365
@@ -10,7 +19,11 @@ import { PROCESSED_SALESLINE_TABLE } from '../constants/tables.js';
  * Query 1: Comparación POR CANAL (solo LEDGER 400000)
  * Compara totales por canal entre BASE y VISTA
  */
-export const QUERY_COMPARACION_POR_CANAL = `
+export function buildComparacionPorCanalQuery({ fromDate, toDate } = {}) {
+  const dateFrom = fromDate || DEFAULT_DATE_FROM;
+  const dateTo = toDate || getYesterdayISO();
+
+  return `
 /* ============================================================
    Comparación POR CANAL (solo LEDGER 400000) — BASE vs VISTA
    Fuentes:
@@ -23,8 +36,8 @@ export const QUERY_COMPARACION_POR_CANAL = `
 WITH
 WINDOW_RAW AS (
   SELECT OBJECT_CONSTRUCT(
-           'from', '2020-01-01',
-           'to',   TO_CHAR(CURRENT_DATE() - 1, 'YYYY-MM-DD')
+           'from', '${dateFrom}',
+           'to',   '${dateTo}'
          ) AS W
 ),
 WINDOW AS (
@@ -89,12 +102,18 @@ FULL OUTER JOIN VIEW_AGG v
   ON COALESCE(b.CANAL_NORM, '__NULL__') = COALESCE(v.CANAL_NORM, '__NULL__')
 ORDER BY CANAL;
 `;
+}
 
 /**
  * Query 2: MISMATCH SUMMARY — Pedidos con diferencias
  * Identifica pedidos específicos con diferencias entre BASE y VISTA
  */
-export const QUERY_MISMATCH_PEDIDOS = `
+export function buildMismatchPedidosQuery({ fromDate, toDate, tolerance } = {}) {
+  const dateFrom = fromDate || DEFAULT_DATE_FROM;
+  const dateTo = toDate || getYesterdayISO();
+  const tol = typeof tolerance === 'number' ? tolerance : 0.005;
+
+  return `
 /* ============================================================
    MISMATCH SUMMARY — BASE (400000, signo invertido) vs VISTA (400000)
    Claves: CANAL, SALESID, INVOICEID
@@ -104,9 +123,9 @@ WITH
 -- Cambia el rango y tolerancia solo aquí:
 WINDOW_RAW AS (
   SELECT OBJECT_CONSTRUCT(
-           'from', '2020-01-01',
-           'to',   TO_CHAR(CURRENT_DATE() - 1, 'YYYY-MM-DD'),
-           'tol',  0.005
+           'from', '${dateFrom}',
+           'to',   '${dateTo}',
+           'tol',  ${tol}
          ) AS W
 ),
 WINDOW AS (
@@ -191,6 +210,7 @@ FROM MISMATCH
 WHERE MATCH_STATUS <> 'MATCH_OK' and SALESID <> ''
 ORDER BY CANAL, SALESID, INVOICEID;
 `;
+}
 
 export const QUERY_DETALLE_LINEAS_POR_SALESID = `
 /* ============================================================
@@ -201,3 +221,197 @@ FROM ${PROCESSED_SALESLINE_TABLE}
 WHERE TRIM(UPPER(SALESID)) = TRIM(UPPER(?))
 ORDER BY LINECREATIONSEQUENCENUMBER;
 `;
+
+const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+
+const parseIsoDate = (value) => {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return isoDateRegex.test(trimmed) ? trimmed : null;
+};
+
+const pickSingleValue = (value) => {
+  if (Array.isArray(value)) {
+    const nonEmpty = value.find((item) => typeof item === 'string' && item.trim().length > 0);
+    return nonEmpty ? nonEmpty.trim() : '';
+  }
+  if (value === null || value === undefined) return '';
+  return String(value).trim();
+};
+
+const splitCsvValues = (value) => {
+  const raw = Array.isArray(value) ? value : [value];
+  return raw
+    .filter((entry) => entry !== undefined && entry !== null)
+    .flatMap((entry) =>
+      String(entry)
+        .split(',')
+        .map((token) => token.trim())
+    )
+    .filter((token) => token.length > 0);
+};
+
+const DEFAULT_VISTA_COLUMNS = [
+  'ACCOUNTINGDATE',
+  'SALESID',
+  'INVOICEID',
+  'GAPCANALDIMENSION',
+  'SOURCE_FLAG',
+  'ACCOUNTINGCURRENCYAMOUNT',
+  'LEDGERACCOUNT',
+];
+
+const DEFAULT_PROCESSED_COLUMNS = [
+  'SALESID',
+  'INVOICEID',
+  'ITEMID',
+  'LINENUM',
+  'LINEAMOUNT',
+  'QTY',
+  'INVOICEDATE',
+  'SNOWFLAKE_CREATED_AT',
+  'SNOWFLAKE_UPDATED_AT',
+  'LINECREATIONSEQUENCENUMBER',
+  'MARKETTYPE',
+  'DATA_SOURCE',
+];
+
+const LINE_SOURCE_CONFIG = {
+  vista: {
+    key: 'vista',
+    table: VIEW_LINE_TABLE,
+    label: 'VW_VENTA_COSTO_LINEAS_TEST',
+    orderBy: 'ACCOUNTINGDATE DESC, SALESID',
+    dateFilter: {
+      fromParam: 'accountingDateFrom',
+      toParam: 'accountingDateTo',
+      expression: 'CAST(ACCOUNTINGDATE AS DATE)',
+    },
+    filters: [
+      { param: 'salesId', column: 'SALESID', type: 'text', match: 'contains', upper: true },
+      { param: 'invoiceId', column: 'INVOICEID', type: 'text', match: 'contains', upper: true },
+      { param: 'canal', column: 'GAPCANALDIMENSION', type: 'list', upper: true },
+      { param: 'sourceFlag', column: 'SOURCE_FLAG', type: 'list', upper: true },
+    ],
+    defaultColumns: DEFAULT_VISTA_COLUMNS,
+    maxRows: 10000,
+    maxDateSpanDays: null,
+  },
+  procesada: {
+    key: 'procesada',
+    table: PROCESSED_SALESLINE_TABLE,
+    label: 'ERP_PROCESSED_SALESLINE',
+    orderBy: 'COALESCE(TRY_TO_DATE(INVOICEDATE), CAST(SNOWFLAKE_CREATED_AT AS DATE)) DESC, SALESID',
+    dateFilter: {
+      fromParam: 'invoiceDateFrom',
+      toParam: 'invoiceDateTo',
+      expression: 'TRY_TO_DATE(INVOICEDATE)',
+    },
+    filters: [
+      { param: 'salesId', column: 'SALESID', type: 'text', match: 'contains', upper: true },
+      { param: 'invoiceId', column: 'INVOICEID', type: 'text', match: 'contains', upper: true },
+    ],
+    defaultColumns: DEFAULT_PROCESSED_COLUMNS,
+    maxRows: 15000,
+    maxDateSpanDays: null,
+  },
+};
+
+export function buildLineDownloadQuery({ source = 'vista', limit, filters = {}, includeAllColumns = false } = {}) {
+  const normalizedSource = typeof source === 'string' ? source.toLowerCase() : 'vista';
+  const config = LINE_SOURCE_CONFIG[normalizedSource] || LINE_SOURCE_CONFIG.vista;
+
+  const whereClauses = [];
+  const binds = [];
+  const appliedFilters = {};
+
+  if (config.dateFilter) {
+    const fromValue = parseIsoDate(pickSingleValue(filters[config.dateFilter.fromParam]));
+    const toValue = parseIsoDate(pickSingleValue(filters[config.dateFilter.toParam]));
+    if (fromValue && toValue && fromValue > toValue) {
+      throw new Error('El rango de fechas es inválido (desde debe ser anterior o igual a hasta)');
+    }
+    if (fromValue && toValue && config.maxDateSpanDays) {
+      const spanMs = new Date(`${toValue}T00:00:00Z`).getTime() - new Date(`${fromValue}T00:00:00Z`).getTime();
+      const spanDays = spanMs / (1000 * 60 * 60 * 24);
+      if (spanDays > config.maxDateSpanDays) {
+        throw new Error(
+          `El rango máximo permitido para ${config.label} es de ${config.maxDateSpanDays} días. Reduce el periodo o usa filtros adicionales.`
+        );
+      }
+    }
+    if (fromValue) {
+      whereClauses.push(`${config.dateFilter.expression} >= TO_DATE(?)`);
+      binds.push(fromValue);
+      appliedFilters[config.dateFilter.fromParam] = fromValue;
+    }
+    if (toValue) {
+      whereClauses.push(`${config.dateFilter.expression} <= TO_DATE(?)`);
+      binds.push(toValue);
+      appliedFilters[config.dateFilter.toParam] = toValue;
+    }
+  }
+
+  config.filters.forEach((filterDef) => {
+    const raw = filters[filterDef.param];
+    if (filterDef.type === 'text') {
+      const value = pickSingleValue(raw);
+      if (!value) return;
+      const prepared = filterDef.upper ? value.toUpperCase() : value;
+      const columnExpr = filterDef.upper ? `UPPER(${filterDef.column})` : filterDef.column;
+      const matchOperator = filterDef.match === 'contains' ? 'LIKE' : '=';
+      whereClauses.push(`${columnExpr} ${matchOperator} ?`);
+      binds.push(filterDef.match === 'contains' ? `%${prepared}%` : prepared);
+      appliedFilters[filterDef.param] = value;
+    } else if (filterDef.type === 'list') {
+      const values = splitCsvValues(raw).map((token) => (filterDef.upper ? token.toUpperCase() : token));
+      if (!values.length) return;
+      const columnExpr = filterDef.upper ? `UPPER(${filterDef.column})` : filterDef.column;
+      const placeholders = values.map(() => '?').join(', ');
+      whereClauses.push(`${columnExpr} IN (${placeholders})`);
+      binds.push(...values);
+      appliedFilters[filterDef.param] = values;
+    }
+  });
+
+  const numericLimit = Number.parseInt(pickSingleValue(limit ?? filters.limit ?? ''), 10);
+  const finalLimit = Number.isFinite(numericLimit) && numericLimit > 0 ? numericLimit : null;
+  const enforcedLimit = config.maxRows && finalLimit && finalLimit > config.maxRows ? config.maxRows : finalLimit;
+  if (finalLimit && config.maxRows && finalLimit > config.maxRows) {
+    throw new Error(`El límite máximo permitido para ${config.label} es ${config.maxRows} filas.`);
+  }
+
+  const selectColumns = includeAllColumns || !config.defaultColumns?.length
+    ? '*'
+    : config.defaultColumns.join(', ');
+
+  const sqlParts = [`SELECT ${selectColumns}`, `FROM ${config.table}`];
+  if (whereClauses.length) {
+    sqlParts.push('WHERE');
+    sqlParts.push(whereClauses.map((clause) => `  ${clause}`).join('\n  AND '));
+  }
+  if (config.orderBy) {
+    sqlParts.push(`ORDER BY ${config.orderBy}`);
+  }
+  if (enforcedLimit) {
+    sqlParts.push('LIMIT ?');
+    binds.push(enforcedLimit);
+  }
+
+  const sql = sqlParts.join('\n');
+
+  return {
+    sql,
+    binds,
+    metadata: {
+      source: config.key,
+      table: config.table,
+      label: config.label,
+      limit: enforcedLimit,
+      filters: appliedFilters,
+      includeAllColumns,
+      selectedColumns: selectColumns === '*' ? ['*'] : config.defaultColumns,
+    },
+  };
+}
