@@ -9,11 +9,13 @@ import {
   HiClipboardList,
   HiLogout,
   HiUser,
+  HiDownload,
 } from 'react-icons/hi';
 import ODataModule from '../components/ODataModule';
 import SnowflakeModule from '../components/SnowflakeModule';
 import DataCorrectionModule from '../components/DataCorrectionModule';
 import QueryLogModule from '../components/QueryLogModule';
+import LineDownloadModule from '../components/LineDownloadModule';
 import ModeToggle from '../components/ModeToggle';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -30,6 +32,13 @@ export default function IndexPage() {
       icon: HiCloudDownload,
       description: 'Comparación de datos',
       color: 'cyan',
+    },
+    {
+      id: 'line-downloads',
+      name: 'Descarga de Líneas',
+      icon: HiDownload,
+      description: 'Descarga y filtros',
+      color: 'teal',
     },
     {
       id: 'data-correction',
@@ -171,12 +180,14 @@ export default function IndexPage() {
               <Heading size="lg" color={textPrimary} fontWeight="bold">
                 {activeModule === 'odata-monitor' && 'Monitor de Datos'}
                 {activeModule === 'snowflake-sync' && 'Snowflake Sync'}
+                {activeModule === 'line-downloads' && 'Descarga de Líneas'}
                 {activeModule === 'data-correction' && 'Corrección de Datos'}
                 {activeModule === 'query-logs' && 'Historial de Scripts'}
               </Heading>
               <Text color={useColorModeValue('gray.600','gray.300')} fontSize="sm">
                 {activeModule === 'odata-monitor' && 'Dynamics 365 Finance & Operations · PdSalesVSCostProcesseds'}
                 {activeModule === 'snowflake-sync' && 'Comparación BASE vs VISTA · Ledger 400000'}
+                {activeModule === 'line-downloads' && 'Descarga flexible · Vista o ERP_PROCESSED_SALESLINE'}
                 {activeModule === 'data-correction' && 'Generador seguro de INSERT/UPDATE + Rollback'}
                 {activeModule === 'query-logs' && 'Logs ejecutados + Rollback directo'}
               </Text>
@@ -220,6 +231,7 @@ export default function IndexPage() {
               }}
             />
           )}
+          {activeModule === 'line-downloads' && <LineDownloadModule />}
           {activeModule === 'data-correction' && (
             <DataCorrectionModule
               salesId={correctionContext?.salesId || ''}

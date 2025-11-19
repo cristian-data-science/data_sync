@@ -1,9 +1,6 @@
 import express from 'express';
 import { executeSnowflakeQuery, testSnowflakeConnection } from '../services/snowflakeService.js';
-import {
-  QUERY_COMPARACION_POR_CANAL,
-  QUERY_MISMATCH_PEDIDOS,
-} from '../queries/snowflake-queries.js';
+import { buildComparacionPorCanalQuery, buildMismatchPedidosQuery } from '../queries/snowflake-queries.js';
 import { analyzeSalesIdMismatch } from '../services/mismatchAnalysis.js';
 import { buildInsertStatements, buildUpdateStatements } from '../services/correctionScriptService.js';
 import { logQueryExecution, fetchQueryLogs, countQueryLogs, fetchLogById } from '../services/queryLogService.js';
@@ -38,7 +35,7 @@ router.get('/test', async (req, res) => {
 router.get('/comparacion-canal', async (req, res) => {
   try {
     console.log('📊 Ejecutando comparación por canal...');
-    const results = await executeSnowflakeQuery(QUERY_COMPARACION_POR_CANAL);
+    const results = await executeSnowflakeQuery(buildComparacionPorCanalQuery());
     
     res.json({
       success: true,
@@ -64,7 +61,7 @@ router.get('/comparacion-canal', async (req, res) => {
 router.get('/mismatch-pedidos', async (req, res) => {
   try {
     console.log('🔍 Ejecutando búsqueda de pedidos con diferencias...');
-    const results = await executeSnowflakeQuery(QUERY_MISMATCH_PEDIDOS);
+    const results = await executeSnowflakeQuery(buildMismatchPedidosQuery());
     
     res.json({
       success: true,

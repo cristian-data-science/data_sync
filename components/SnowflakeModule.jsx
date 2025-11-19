@@ -34,6 +34,9 @@ import {
   DrawerBody,
   DrawerFooter,
   DrawerCloseButton,
+  FormControl,
+  FormLabel,
+  Input,
   List,
   ListItem,
   ListIcon,
@@ -52,6 +55,9 @@ const tableScrollStyles = {
   '&::-webkit-scrollbar-thumb': { background: '#A0AEC0', borderRadius: '999px' },
 };
 
+const DEFAULT_DATE_FROM = '2020-01-01';
+const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+
 function SnowflakeModule({ onLaunchCorrection }) {
   const toast = useToast();
   const [analysisTarget, setAnalysisTarget] = useState(null);
@@ -64,28 +70,76 @@ function SnowflakeModule({ onLaunchCorrection }) {
     date.setDate(date.getDate() - 1);
     return date.toISOString().slice(0, 10);
   }, []);
+  const [dateFilters, setDateFilters] = useState(() => ({
+    from: DEFAULT_DATE_FROM,
+    to: yesterdayIso,
+  }));
+  const [pendingDateFilters, setPendingDateFilters] = useState(() => ({
+    from: DEFAULT_DATE_FROM,
+    to: yesterdayIso,
+  }));
 
   const handleSectionJump = (sectionRef) => {
     sectionRef?.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  const handleDateInputChange = (field) => (event) => {
+    const value = event.target.value;
+    setPendingDateFilters((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const applyDateFilters = () => {
+    const { from, to } = pendingDateFilters;
+    if (!isoDateRegex.test(from) || !isoDateRegex.test(to)) {
+      toast({
+        title: 'Formato de fecha inválido',
+        description: 'Usa el formato YYYY-MM-DD para ambas fechas',
+        status: 'warning',
+        duration: 4000,
+      });
+      return;
+    }
+
+    if (from > to) {
+      toast({
+        title: 'Rango de fechas inválido',
+        description: 'La fecha "desde" debe ser anterior o igual a la fecha "hasta"',
+        status: 'warning',
+        duration: 4000,
+      });
+      return;
+    }
+
+    const nextRange = { from, to };
+    setPendingDateFilters(nextRange);
+    setDateFilters(nextRange);
+  };
+
+  const handleResetDateFilters = () => {
+    const defaults = { from: DEFAULT_DATE_FROM, to: yesterdayIso };
+    setPendingDateFilters(defaults);
+    setDateFilters(defaults);
+  };
+
+  const isApplyDisabled = dateFilters.from === pendingDateFilters.from && dateFilters.to === pendingDateFilters.to;
+
   const queryFilters = useMemo(
     () => ({
       canal: [
         { label: 'Ledger Account', value: '400000' },
-        { label: 'Fechas', value: `2020-01-01 a ${yesterdayIso}` },
+        { label: 'Fechas', value: `${dateFilters.from} a ${dateFilters.to}` },
         { label: 'SalesId', value: 'Solo registros con valor' },
         { label: 'Warehouse', value: 'COMPUTE_WH' },
       ],
       mismatch: [
         { label: 'Ledger Account', value: '400000' },
-        { label: 'Fechas', value: `2020-01-01 a ${yesterdayIso}` },
+        { label: 'Fechas', value: `${dateFilters.from} a ${dateFilters.to}` },
         { label: 'SalesId', value: 'Solo registros con valor' },
         { label: 'Tolerancia', value: '0.5% (0.005)' },
         { label: 'Warehouse', value: 'COMPUTE_WH' },
       ],
     }),
-    [yesterdayIso]
+    [dateFilters]
   );
 
   const {
@@ -94,9 +148,9 @@ function SnowflakeModule({ onLaunchCorrection }) {
     refetch: refetchCanal,
     isLoading: isLoadingCanal,
   } = useQuery({
-    queryKey: ['snowflake-canal'],
+    queryKey: ['snowflake-canal', dateFilters.from, dateFilters.to],
     queryFn: async () => {
-      const { data } = await api.get('/snowflake/comparacion-canal');
+      const { data } = await api.get('/snowflake/comparacion-canal', { params: dateFilters });
       return data;
     },
     refetchOnMount: 'always',
@@ -113,9 +167,9 @@ function SnowflakeModule({ onLaunchCorrection }) {
     refetch: refetchMismatch,
     isLoading: isLoadingMismatch,
   } = useQuery({
-    queryKey: ['snowflake-mismatch'],
+    queryKey: ['snowflake-mismatch', dateFilters.from, dateFilters.to],
     queryFn: async () => {
-      const { data } = await api.get('/snowflake/mismatch-pedidos');
+      const { data } = await api.get('/snowflake/mismatch-pedidos', { params: dateFilters });
       return data;
     },
     refetchOnMount: 'always',
@@ -138,13 +192,15 @@ function SnowflakeModule({ onLaunchCorrection }) {
   const canalSummary = useMemo(() => {
     const rows = canalData?.data || [];
     if (!rows.length) return null;
+    const baseTotal = rows.reduce((acc, row) => acc + (row.BASE_TOTAL || 0), 0);
+    const viewTotal = rows.reduce((acc, row) => acc + (row.VIEW_TOTAL || 0), 0);
     const totalDiff = rows.reduce((acc, row) => acc + (row.DIFF_BASE_VIEW || 0), 0);
     const absoluteDiff = rows.reduce((acc, row) => acc + Math.abs(row.DIFF_BASE_VIEW || 0), 0);
     const worstRow = rows.reduce((worst, row) => {
       if (!worst) return row;
       return Math.abs(row.DIFF_BASE_VIEW || 0) > Math.abs(worst.DIFF_BASE_VIEW || 0) ? row : worst;
     }, null);
-    return { totalDiff, absoluteDiff, worstRow };
+    return { totalDiff, absoluteDiff, worstRow, baseTotal, viewTotal };
   }, [canalData]);
 
   const mismatchSummary = useMemo(() => {
@@ -256,6 +312,32 @@ function SnowflakeModule({ onLaunchCorrection }) {
               <Button onClick={() => handleSectionJump(mismatchSectionRef)}>SalesId</Button>
             </ButtonGroup>
           </HStack>
+          <Divider />
+          <Box borderWidth="1px" borderColor={borderColStrong} borderRadius="xl" p={4} bg={useColorModeValue('gray.50', 'gray.900')} w="full">
+            <HStack justify="space-between" align="flex-end" flexWrap="wrap" spacing={4}>
+              <HStack spacing={4} align="flex-end" flexWrap="wrap">
+                <FormControl minW="180px">
+                  <FormLabel fontSize="sm" color={textSecondary}>Fecha desde</FormLabel>
+                  <Input type="date" value={pendingDateFilters.from} max={pendingDateFilters.to || undefined} onChange={handleDateInputChange('from')} bg={cardBg} borderColor={borderColStrong} />
+                </FormControl>
+                <FormControl minW="180px">
+                  <FormLabel fontSize="sm" color={textSecondary}>Fecha hasta</FormLabel>
+                  <Input type="date" value={pendingDateFilters.to} min={pendingDateFilters.from || undefined} onChange={handleDateInputChange('to')} bg={cardBg} borderColor={borderColStrong} />
+                </FormControl>
+              </HStack>
+              <HStack spacing={3} align="center">
+                <Button variant="ghost" onClick={handleResetDateFilters} size="sm">
+                  Restablecer
+                </Button>
+                <Button colorScheme="cyan" onClick={applyDateFilters} isDisabled={isApplyDisabled} size="sm">
+                  Aplicar fechas
+                </Button>
+              </HStack>
+            </HStack>
+            <Text fontSize="xs" color={textSecondary} mt={2}>
+              El rango seleccionado se aplica simultáneamente a ambas consultas de Snowflake.
+            </Text>
+          </Box>
         </VStack>
       </Box>
 
@@ -361,6 +443,19 @@ function SnowflakeModule({ onLaunchCorrection }) {
                           <Td isNumeric>{formatPercent(row.PCT_BASE_VIEW)}</Td>
                         </Tr>
                       ))}
+                      {canalSummary && (
+                        <Tr bg={useColorModeValue('gray.100', 'gray.900')}>
+                          <Td fontWeight="bold">Total</Td>
+                          <Td isNumeric fontWeight="bold">{formatNumber(canalSummary.baseTotal)}</Td>
+                          <Td isNumeric fontWeight="bold">{formatNumber(canalSummary.viewTotal)}</Td>
+                          <Td isNumeric fontWeight="bold" color={Math.abs(canalSummary.totalDiff || 0) > 0.01 ? 'red.500' : 'green.500'}>
+                            {formatNumber(canalSummary.totalDiff)}
+                          </Td>
+                          <Td isNumeric fontWeight="bold">
+                            {canalSummary.baseTotal === 0 ? '—' : formatPercent(canalSummary.totalDiff / canalSummary.baseTotal)}
+                          </Td>
+                        </Tr>
+                      )}
                     </Tbody>
                   </Table>
                 </TableContainer>
