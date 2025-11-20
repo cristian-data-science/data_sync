@@ -77,10 +77,10 @@ function EditDrawer({ isOpen, onClose, record, onSave }) {
           </VStack>
         </DrawerBody>
         <DrawerFooter borderTopWidth="1px" gap={3}>
-          <Button variant="outline" onClick={onClose} leftIcon={<HiX />} size="lg">
+          <Button variant="outline" onClick={onClose} leftIcon={<HiX />} size="lg" borderRadius="lg">
             Cancelar
           </Button>
-          <Button colorScheme="blue" onClick={() => onSave(local)} leftIcon={<HiCheck />} size="lg">
+          <Button colorScheme="blue" onClick={() => onSave(local)} leftIcon={<HiCheck />} size="lg" borderRadius="lg">
             Guardar Cambios
           </Button>
         </DrawerFooter>
@@ -146,18 +146,17 @@ function ODataModule() {
 
   const cardBg = useColorModeValue('white', 'gray.800');
   const subtleBg = useColorModeValue('gray.50', 'gray.700');
-  const borderCol = useColorModeValue('gray.100', 'gray.700');
-  const borderColStrong = useColorModeValue('gray.200', 'gray.600');
+  const borderCol = useColorModeValue('gray.200', 'gray.700');
   const textPrimary = useColorModeValue('gray.800', 'gray.100');
   const textSecondary = useColorModeValue('gray.600', 'gray.300');
   const textMuted = useColorModeValue('gray.500', 'gray.400');
 
   return (
     <VStack align="stretch" spacing={6}>
-      <Box bg={cardBg} borderRadius="2xl" shadow="md" p={8} borderWidth="1px" borderColor={borderCol}>
+      <Box bg={cardBg} borderRadius="lg" shadow="sm" p={6} borderWidth="1px" borderColor={borderCol}>
         <VStack align="stretch" spacing={4}>
           <HStack>
-            <Box p={3} bg="blue.50" borderRadius="xl">
+            <Box p={3} bg="blue.50" borderRadius="lg">
               <HiSearch size={24} color="#3182CE" />
             </Box>
             <Box>
@@ -170,23 +169,23 @@ function ODataModule() {
             </Box>
           </HStack>
 
-          <Divider borderColor={borderColStrong} />
+          <Divider borderColor={borderCol} />
 
           <HStack spacing={4}>
             <InputGroup size="lg" flex={1}>
               <InputLeftElement pointerEvents="none">
                 <HiSearch color="#A0AEC0" size={20} />
               </InputLeftElement>
-              <Input placeholder="Ej: PAT-001260898" value={salesId} onChange={(e) => setSalesId(e.target.value)} onKeyDown={handleKeyDown} borderRadius="xl" borderWidth="2px" _focus={{ borderColor: 'blue.400', boxShadow: '0 0 0 1px #3182CE' }} />
+              <Input placeholder="Ej: PAT-001260898" value={salesId} onChange={(e) => setSalesId(e.target.value)} onKeyDown={handleKeyDown} borderRadius="lg" borderWidth="1px" _focus={{ borderColor: 'blue.400', boxShadow: '0 0 0 1px #3182CE' }} />
             </InputGroup>
-            <Button colorScheme="blue" size="lg" onClick={handleSearch} isDisabled={!salesId.trim() || isFetching} isLoading={isFetching} px={10} borderRadius="xl" shadow="md" _hover={{ transform: 'translateY(-2px)', shadow: 'lg' }} transition="all 0.2s">
+            <Button colorScheme="blue" size="lg" onClick={handleSearch} isDisabled={!salesId.trim() || isFetching} isLoading={isFetching} px={8} borderRadius="lg" shadow="sm" _hover={{ shadow: 'md' }} transition="all 0.2s">
               Buscar
             </Button>
           </HStack>
         </VStack>
       </Box>
 
-      <Box bg={cardBg} borderRadius="2xl" shadow="md" borderWidth="1px" borderColor={borderCol} overflow="hidden">
+      <Box bg={cardBg} borderRadius="lg" shadow="sm" borderWidth="1px" borderColor={borderCol} overflow="hidden">
         {isFetching ? (
           <VStack py={16} spacing={4}>
             <Spinner size="xl" color="blue.500" thickness="4px" />
@@ -196,12 +195,12 @@ function ODataModule() {
           </VStack>
         ) : rows.length ? (
           <>
-            <HStack justify="space-between" px={8} py={5} borderBottomWidth="1px" borderColor={borderColStrong}>
+            <HStack justify="space-between" px={6} py={4} borderBottomWidth="1px" borderColor={borderCol}>
               <HStack>
                 <Heading size="md" color={textPrimary}>
                   Resultados
                 </Heading>
-                <Badge colorScheme="blue" fontSize="md" px={4} py={1.5} borderRadius="full">
+                <Badge colorScheme="blue" fontSize="sm" px={3} py={1} borderRadius="lg">
                   {rows.length} registro{rows.length !== 1 ? 's' : ''}
                 </Badge>
               </HStack>
@@ -211,7 +210,7 @@ function ODataModule() {
                 <Thead position="sticky" top={0} bg={subtleBg} zIndex={1}>
                   <Tr>
                     {columns.map((c) => (
-                      <Th key={c} textTransform="none" fontSize="xs" fontWeight="bold" color={textPrimary} py={4}>
+                      <Th key={c} textTransform="none" fontSize="xs" fontWeight="bold" color={textPrimary} py={3}>
                         {c}
                       </Th>
                     ))}
@@ -221,7 +220,7 @@ function ODataModule() {
                   {rows.map((r, i) => (
                     <Tr key={i} _hover={{ bg: subtleBg }} transition="background 0.2s">
                       {columns.map((c) => (
-                        <Td key={c} fontSize="sm" color={textPrimary}>
+                        <Td key={c} fontSize="sm" color={textPrimary} whiteSpace="nowrap">
                           {String(r[c] ?? '')}
                         </Td>
                       ))}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Heading, Text, Button, HStack, VStack, Flex, Badge, useColorModeValue, IconButton, Menu, MenuButton, MenuList, MenuItem, MenuDivider, Avatar, useToast } from '@chakra-ui/react';
+import { Box, Heading, Text, Button, HStack, VStack, Flex, Badge, useColorModeValue, Menu, MenuButton, MenuList, MenuItem, MenuDivider, Avatar, useToast } from '@chakra-ui/react';
 import {
   HiChartBar,
   HiPencilAlt,
@@ -24,44 +24,11 @@ export default function IndexPage() {
   const toast = useToast();
 
   const modules = [
-    {
-      id: 'snowflake-sync',
-      name: 'Snowflake Sync',
-      icon: HiCloudDownload,
-      description: 'Comparación de datos',
-      color: 'cyan',
-    },
-    {
-      id: 'data-correction',
-      name: 'Corrección de Datos',
-      icon: HiPencilAlt,
-      description: 'Scripts de inserción/edición',
-      color: 'purple',
-      disabled: false,
-    },
-    {
-      id: 'odata-monitor',
-      name: 'OData Monitor',
-      icon: HiChartBar,
-      description: 'Consultas Dynamics 365',
-      color: 'blue',
-    },
-    {
-      id: 'query-logs',
-      name: 'Historial de Scripts',
-      icon: HiClipboardList,
-      description: 'Auditoría y rollbacks',
-      color: 'teal',
-      disabled: false,
-    },
-    {
-      id: 'analytics',
-      name: 'Analytics',
-      icon: HiChartPie,
-      description: 'Reportes y métricas',
-      color: 'orange',
-      disabled: true,
-    },
+    { id: 'snowflake-sync', name: 'Snowflake Sync', icon: HiCloudDownload, description: 'Comparación de datos' },
+    { id: 'data-correction', name: 'Corrección de Datos', icon: HiPencilAlt, description: 'Scripts de inserción/edición', disabled: false },
+    { id: 'odata-monitor', name: 'OData Monitor', icon: HiChartBar, description: 'Consultas Dynamics 365' },
+    { id: 'query-logs', name: 'Historial de Scripts', icon: HiClipboardList, description: 'Auditoría y rollbacks', disabled: false },
+    { id: 'analytics', name: 'Analytics', icon: HiChartPie, description: 'Reportes y métricas', disabled: true },
   ];
 
   const bgApp = useColorModeValue('gray.50', 'gray.900');
@@ -83,11 +50,13 @@ export default function IndexPage() {
 
   return (
     <Flex h="100vh" bg={bgApp}>
+      {/* Sidebar */}
       <Box w="280px" bg={bgSidebar} borderRightWidth="1px" borderColor={borderCol} shadow="sm">
         <VStack align="stretch" spacing={0} h="full">
+          {/* Sidebar Header */}
           <Box p={6} borderBottomWidth="1px" borderColor={borderCol}>
             <HStack spacing={3}>
-              <Box p={2.5} bg="gradient.primary" bgGradient="linear(to-br, blue.500, blue.600)" borderRadius="xl" shadow="md">
+              <Box p={2.5} bg="gradient.primary" bgGradient="linear(to-br, blue.500, blue.600)" borderRadius="lg" shadow="sm">
                 <HiDatabase size={24} color="white" />
               </Box>
               <Box>
@@ -101,6 +70,7 @@ export default function IndexPage() {
             </HStack>
           </Box>
 
+          {/* Navigation Modules */}
           <Box flex={1} overflowY="auto" p={4}>
             <Text fontSize="xs" fontWeight="bold" color={textSecondary} textTransform="uppercase" letterSpacing="wider" mb={3} px={2}>
               Módulos
@@ -110,12 +80,14 @@ export default function IndexPage() {
                 const Icon = module.icon;
                 const isActive = activeModule === module.id;
                 const isEnabled = !module.disabled;
-                const activeBg = useColorModeValue(`${module.color}.50`, `${module.color}.900`);
-                const activeColor = useColorModeValue(`${module.color}.700`, `${module.color}.200`);
-                const activeBorder = useColorModeValue(`${module.color}.200`, `${module.color}.600`);
-                const hoverBg = useColorModeValue(isActive ? `${module.color}.100` : 'gray.50', isActive ? `${module.color}.800` : 'gray.700');
-                const iconBg = useColorModeValue(isActive ? `${module.color}.100` : 'gray.100', isActive ? `${module.color}.700` : 'gray.600');
+
+                const activeBg = useColorModeValue('blue.50', 'blue.900');
+                const activeColor = useColorModeValue('blue.700', 'blue.200');
+                const hoverBg = useColorModeValue(isActive ? 'blue.100' : 'gray.100', isActive ? 'blue.800' : 'gray.700');
+                const iconBg = useColorModeValue(isActive ? 'blue.100' : 'gray.100', isActive ? 'blue.800' : 'gray.600');
                 const inactiveColor = useColorModeValue('gray.700', 'gray.300');
+                const iconInactiveColor = useColorModeValue('gray.500', 'gray.400');
+
                 return (
                   <Button
                     key={module.id}
@@ -127,17 +99,31 @@ export default function IndexPage() {
                     px={4}
                     bg={isActive ? activeBg : 'transparent'}
                     color={isActive ? activeColor : inactiveColor}
-                    borderRadius="xl"
-                    border="2px solid"
-                    borderColor={isActive ? activeBorder : 'transparent'}
-                    _hover={{ bg: isEnabled ? hoverBg : 'transparent', transform: isEnabled ? 'translateX(2px)' : 'none' }}
+                    borderRadius="lg"
+                    _hover={{ bg: isEnabled ? hoverBg : 'transparent' }}
                     transition="all 0.2s"
                     cursor={isEnabled ? 'pointer' : 'not-allowed'}
                     opacity={isEnabled ? 1 : 0.5}
-                 >
+                    position="relative"
+                    _before={
+                      isActive
+                        ? {
+                            content: '""',
+                            position: 'absolute',
+                            left: 0,
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            height: '60%',
+                            width: '4px',
+                            bg: 'blue.500',
+                            borderRadius: 'full',
+                          }
+                        : {}
+                    }
+                  >
                     <HStack spacing={3} w="full">
-                      <Box p={2} bg={iconBg} borderRadius="lg">
-                        <Icon size={18} color={isActive ? undefined : '#718096'} />
+                      <Box p={2} bg={iconBg} borderRadius="md">
+                        <Icon size={18} color={isActive ? activeColor : iconInactiveColor} />
                       </Box>
                       <VStack align="start" spacing={0} flex={1}>
                         <Text fontSize="sm" fontWeight="semibold">
@@ -154,6 +140,7 @@ export default function IndexPage() {
             </VStack>
           </Box>
 
+          {/* Sidebar Footer */}
           <Box p={4} borderTopWidth="1px" borderColor={borderCol}>
             <HStack spacing={2} fontSize="xs" color="gray.500">
               <Badge colorScheme="green" variant="subtle">v1.0.0</Badge>
@@ -164,21 +151,20 @@ export default function IndexPage() {
         </VStack>
       </Box>
 
+      {/* Main Content */}
       <Box flex={1} overflow="hidden" display="flex" flexDirection="column">
-        <Box bg={useColorModeValue('white','gray.800')} borderBottomWidth="1px" borderColor={borderCol} px={8} py={6} shadow="sm">
+        {/* Header */}
+        <Box bg={useColorModeValue('white','gray.800')} borderBottomWidth="1px" borderColor={borderCol} px={6} py={4} shadow="sm">
           <HStack justify="space-between" align="center">
-            <VStack align="start" spacing={1}>
-              <Heading size="lg" color={textPrimary} fontWeight="bold">
-                {activeModule === 'odata-monitor' && 'Monitor de Datos'}
-                {activeModule === 'snowflake-sync' && 'Snowflake Sync'}
-                {activeModule === 'data-correction' && 'Corrección de Datos'}
-                {activeModule === 'query-logs' && 'Historial de Scripts'}
+            <VStack align="start" spacing={0}>
+              <Heading size="md" color={textPrimary} fontWeight="bold">
+                {modules.find(m => m.id === activeModule)?.name}
               </Heading>
-              <Text color={useColorModeValue('gray.600','gray.300')} fontSize="sm">
-                {activeModule === 'odata-monitor' && 'Dynamics 365 Finance & Operations · PdSalesVSCostProcesseds'}
-                {activeModule === 'snowflake-sync' && 'Comparación BASE vs VISTA · Ledger 400000'}
-                {activeModule === 'data-correction' && 'Generador seguro de INSERT/UPDATE + Rollback'}
-                {activeModule === 'query-logs' && 'Logs ejecutados + Rollback directo'}
+              <Text color={useColorModeValue('gray.600','gray.300')} fontSize="xs">
+                 {activeModule === 'odata-monitor' && 'Dynamics 365 Finance & Operations · PdSalesVSCostProcesseds'}
+                 {activeModule === 'snowflake-sync' && 'Comparación BASE vs VISTA · Ledger 400000'}
+                 {activeModule === 'data-correction' && 'Generador seguro de INSERT/UPDATE + Rollback'}
+                 {activeModule === 'query-logs' && 'Logs ejecutados + Rollback directo'}
               </Text>
             </VStack>
             <HStack spacing={3}>
@@ -187,7 +173,7 @@ export default function IndexPage() {
                 <MenuButton
                   as={Button}
                   variant="ghost"
-                  leftIcon={<Avatar size="xs" name={user?.name} bg="brand.500" />}
+                  leftIcon={<Avatar size="xs" name={user?.name} bg="blue.500" />}
                   rightIcon={<HiUser />}
                   size="sm"
                   _hover={{ bg: useColorModeValue('gray.100', 'gray.700') }}
@@ -208,7 +194,8 @@ export default function IndexPage() {
           </HStack>
         </Box>
 
-        <Box flex={1} overflow="auto" p={8}>
+        {/* Module Content */}
+        <Box flex={1} overflow="auto" p={6}>
           {activeModule === 'odata-monitor' && <ODataModule />}
           {activeModule === 'snowflake-sync' && (
             <SnowflakeModule

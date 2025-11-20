@@ -220,18 +220,17 @@ function SnowflakeModule({ onLaunchCorrection }) {
 
   const cardBg = useColorModeValue('white', 'gray.800');
   const subtleBg = useColorModeValue('gray.50', 'gray.700');
-  const borderCol = useColorModeValue('gray.100', 'gray.700');
-  const borderColStrong = useColorModeValue('gray.200', 'gray.600');
+  const borderCol = useColorModeValue('gray.200', 'gray.700');
   const textPrimary = useColorModeValue('gray.800', 'gray.100');
   const textSecondary = useColorModeValue('gray.600', 'gray.300');
 
   return (
     <VStack align="stretch" spacing={6}>
-      <Box bg={cardBg} borderRadius="2xl" shadow="md" p={8} borderWidth="1px" borderColor={borderCol}>
+      <Box bg={cardBg} borderRadius="lg" shadow="sm" p={6} borderWidth="1px" borderColor={borderCol}>
         <VStack align="stretch" spacing={4}>
           <HStack justify="space-between">
             <HStack>
-              <Box p={3} bg="cyan.50" borderRadius="xl">
+              <Box p={3} bg="cyan.50" borderRadius="lg">
                 <HiCloudDownload size={24} color="#00B5D8" />
               </Box>
               <Box>
@@ -243,7 +242,7 @@ function SnowflakeModule({ onLaunchCorrection }) {
                 </Text>
               </Box>
             </HStack>
-            <Button leftIcon={<HiRefresh />} onClick={handleRefresh} isLoading={isFetchingCanal || isFetchingMismatch} colorScheme="cyan" size="md">
+            <Button leftIcon={<HiRefresh />} onClick={handleRefresh} isLoading={isFetchingCanal || isFetchingMismatch} colorScheme="cyan" size="md" borderRadius="lg">
               Actualizar
             </Button>
           </HStack>
@@ -260,7 +259,7 @@ function SnowflakeModule({ onLaunchCorrection }) {
       </Box>
 
       <VStack align="stretch" spacing={6}>
-        <Box ref={canalSectionRef} bg={cardBg} borderRadius="2xl" shadow="md" borderWidth="1px" borderColor={borderCol} overflow="hidden">
+        <Box ref={canalSectionRef} bg={cardBg} borderRadius="lg" shadow="sm" borderWidth="1px" borderColor={borderCol} overflow="hidden">
           {isLoadingCanal || isFetchingCanal ? (
             <VStack py={16} spacing={4}>
               <Spinner size="xl" color="cyan.500" thickness="4px" />
@@ -270,12 +269,12 @@ function SnowflakeModule({ onLaunchCorrection }) {
             </VStack>
           ) : canalData?.data?.length ? (
             <>
-              <HStack justify="space-between" px={8} py={5} borderBottomWidth="1px" borderColor={borderColStrong}>
+              <HStack justify="space-between" px={6} py={4} borderBottomWidth="1px" borderColor={borderCol}>
                 <HStack>
                   <Heading size="md" color={textPrimary}>
                     Comparación por Canal
                   </Heading>
-                  <Badge colorScheme="cyan" fontSize="md" px={4} py={1.5} borderRadius="full">
+                  <Badge colorScheme="cyan" fontSize="sm" px={3} py={1} borderRadius="lg">
                     {canalData.count} canal{canalData.count !== 1 ? 'es' : ''}
                   </Badge>
                 </HStack>
@@ -284,9 +283,9 @@ function SnowflakeModule({ onLaunchCorrection }) {
               {(() => {
                 const s = canalSummary;
                 return s ? (
-                  <Grid templateColumns={{ base: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }} px={8} py={4} gap={4} bg={subtleBg} borderBottomWidth="1px" borderColor={borderColStrong}>
+                  <Grid templateColumns={{ base: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }} px={6} py={4} gap={4} bg={subtleBg} borderBottomWidth="1px" borderColor={borderCol}>
                     <GridItem>
-                      <Box borderWidth="1px" borderRadius="xl" p={4} bg={useColorModeValue('white','gray.800')}>
+                      <Box borderWidth="1px" borderRadius="lg" p={4} bg={useColorModeValue('white','gray.800')}>
                         <Stat>
                           <StatLabel>Dif. neta</StatLabel>
                           <StatNumber fontSize="xl">{formatNumber(s.totalDiff)}</StatNumber>
@@ -295,7 +294,7 @@ function SnowflakeModule({ onLaunchCorrection }) {
                       </Box>
                     </GridItem>
                     <GridItem>
-                      <Box borderWidth="1px" borderRadius="xl" p={4} bg={useColorModeValue('white','gray.800')}>
+                      <Box borderWidth="1px" borderRadius="lg" p={4} bg={useColorModeValue('white','gray.800')}>
                         <Stat>
                           <StatLabel>Dif. absoluta</StatLabel>
                           <StatNumber fontSize="xl">{formatNumber(s.absoluteDiff)}</StatNumber>
@@ -304,7 +303,7 @@ function SnowflakeModule({ onLaunchCorrection }) {
                       </Box>
                     </GridItem>
                     <GridItem>
-                      <Box borderWidth="1px" borderRadius="xl" p={4} bg={useColorModeValue('white','gray.800')}>
+                      <Box borderWidth="1px" borderRadius="lg" p={4} bg={useColorModeValue('white','gray.800')}>
                         <Stat>
                           <StatLabel>Peor canal</StatLabel>
                           <StatNumber fontSize="lg">{s.worstRow?.CANAL || '—'}</StatNumber>
@@ -313,7 +312,7 @@ function SnowflakeModule({ onLaunchCorrection }) {
                       </Box>
                     </GridItem>
                     <GridItem>
-                      <Box borderWidth="1px" borderRadius="xl" p={4} bg={useColorModeValue('white','gray.800')}>
+                      <Box borderWidth="1px" borderRadius="lg" p={4} bg={useColorModeValue('white','gray.800')}>
                         <Stat>
                           <StatLabel>% peor canal</StatLabel>
                           <StatNumber fontSize="xl">{formatPercent(s.worstRow?.PCT_BASE_VIEW)}</StatNumber>
@@ -324,12 +323,12 @@ function SnowflakeModule({ onLaunchCorrection }) {
                   </Grid>
                 ) : null;
               })()}
-              <Box px={8} py={4} bg={subtleBg} borderBottomWidth="1px" borderColor={borderColStrong}>
+              <Box px={6} py={4} bg={subtleBg} borderBottomWidth="1px" borderColor={borderCol}>
                 <Text fontSize="xs" color="gray.500" fontWeight="bold" textTransform="uppercase" letterSpacing="wide">Filtros aplicados</Text>
                 <Wrap mt={3} spacing={3}>
                   {queryFilters.canal.map((filter) => (
                     <WrapItem key={`${filter.label}-${filter.value}`}>
-                      <Tag size="lg" variant="subtle" colorScheme="cyan" borderRadius="full" px={4} py={2} bg={useColorModeValue('white','gray.800')} borderWidth="1px" borderColor="cyan.100" shadow="xs">
+                      <Tag size="lg" variant="subtle" colorScheme="cyan" borderRadius="lg" px={3} py={1.5} bg={useColorModeValue('white','gray.800')} borderWidth="1px" borderColor="cyan.100" shadow="xs">
                         <VStack align="start" spacing={0}>
                           <Text fontSize="10px" textTransform="uppercase" color="cyan.600" fontWeight="bold">{filter.label}</Text>
                           <Text fontSize="sm" color={textPrimary} fontWeight="semibold">{filter.value}</Text>
@@ -339,7 +338,7 @@ function SnowflakeModule({ onLaunchCorrection }) {
                   ))}
                 </Wrap>
               </Box>
-              <Box px={{ base: 4, md: 8 }} pb={8} pt={2}>
+              <Box px={6} pb={6} pt={2}>
                 <TableContainer overflowX="auto" sx={tableScrollStyles}>
                   <Table variant="simple" size="sm">
                     <Thead position="sticky" top={0} bg={subtleBg} zIndex={1}>
@@ -379,7 +378,7 @@ function SnowflakeModule({ onLaunchCorrection }) {
           )}
         </Box>
 
-        <Box ref={mismatchSectionRef} bg={cardBg} borderRadius="2xl" shadow="md" borderWidth="1px" borderColor={borderCol} overflow="hidden">
+        <Box ref={mismatchSectionRef} bg={cardBg} borderRadius="lg" shadow="sm" borderWidth="1px" borderColor={borderCol} overflow="hidden">
           {isLoadingMismatch || isFetchingMismatch ? (
             <VStack py={16} spacing={4}>
               <Spinner size="xl" color="cyan.500" thickness="4px" />
@@ -387,10 +386,10 @@ function SnowflakeModule({ onLaunchCorrection }) {
             </VStack>
           ) : mismatchData?.data?.length ? (
             <>
-              <HStack justify="space-between" px={8} py={5} borderBottomWidth="1px" borderColor={borderColStrong}>
+              <HStack justify="space-between" px={6} py={4} borderBottomWidth="1px" borderColor={borderCol}>
                 <HStack>
                   <Heading size="md" color={textPrimary}>SALESID VS SALESID</Heading>
-                  <Badge colorScheme="red" fontSize="md" px={4} py={1.5} borderRadius="full">
+                  <Badge colorScheme="red" fontSize="sm" px={3} py={1} borderRadius="lg">
                     {mismatchData.count} pedido{mismatchData.count !== 1 ? 's' : ''}
                   </Badge>
                 </HStack>
@@ -399,9 +398,9 @@ function SnowflakeModule({ onLaunchCorrection }) {
               {(() => {
                 const s = mismatchSummary;
                 return s ? (
-                  <Grid templateColumns={{ base: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }} px={8} py={4} gap={4} bg={subtleBg} borderBottomWidth="1px" borderColor={borderColStrong}>
+                  <Grid templateColumns={{ base: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }} px={6} py={4} gap={4} bg={subtleBg} borderBottomWidth="1px" borderColor={borderCol}>
                     <GridItem>
-                      <Box borderWidth="1px" borderRadius="xl" p={4} bg={useColorModeValue('white','gray.800')}>
+                      <Box borderWidth="1px" borderRadius="lg" p={4} bg={useColorModeValue('white','gray.800')}>
                         <Stat>
                           <StatLabel>Dif. absoluta</StatLabel>
                           <StatNumber fontSize="xl">{formatNumber(s.absoluteDiff)}</StatNumber>
@@ -410,7 +409,7 @@ function SnowflakeModule({ onLaunchCorrection }) {
                       </Box>
                     </GridItem>
                     <GridItem>
-                      <Box borderWidth="1px" borderRadius="xl" p={4} bg={useColorModeValue('white','gray.800')}>
+                      <Box borderWidth="1px" borderRadius="lg" p={4} bg={useColorModeValue('white','gray.800')}>
                         <Stat>
                           <StatLabel>Solo BASE</StatLabel>
                           <StatNumber fontSize="xl">{s.baseOnly}</StatNumber>
@@ -419,7 +418,7 @@ function SnowflakeModule({ onLaunchCorrection }) {
                       </Box>
                     </GridItem>
                     <GridItem>
-                      <Box borderWidth="1px" borderRadius="xl" p={4} bg={useColorModeValue('white','gray.800')}>
+                      <Box borderWidth="1px" borderRadius="lg" p={4} bg={useColorModeValue('white','gray.800')}>
                         <Stat>
                           <StatLabel>Solo VISTA</StatLabel>
                           <StatNumber fontSize="xl">{s.viewOnly}</StatNumber>
@@ -428,7 +427,7 @@ function SnowflakeModule({ onLaunchCorrection }) {
                       </Box>
                     </GridItem>
                     <GridItem>
-                      <Box borderWidth="1px" borderRadius="xl" p={4} bg={useColorModeValue('white','gray.800')}>
+                      <Box borderWidth="1px" borderRadius="lg" p={4} bg={useColorModeValue('white','gray.800')}>
                         <Stat>
                           <StatLabel>Mayor diferencia</StatLabel>
                           <StatNumber fontSize="lg">{s.worstRow?.SALESID || '—'}</StatNumber>
@@ -439,7 +438,7 @@ function SnowflakeModule({ onLaunchCorrection }) {
                   </Grid>
                 ) : null;
               })()}
-              <Box px={{ base: 4, md: 8 }} pb={8} pt={2}>
+              <Box px={6} pb={6} pt={2}>
                 <TableContainer overflowX="auto" sx={tableScrollStyles}>
                   <Table variant="simple" size="sm">
                     <Thead position="sticky" top={0} bg={subtleBg} zIndex={1}>
@@ -469,7 +468,7 @@ function SnowflakeModule({ onLaunchCorrection }) {
                           <Td isNumeric fontSize="sm">{formatNumber(row.VIEW_AMT)}</Td>
                           <Td isNumeric fontSize="sm" color={Math.abs(row.DIFF_AMT || 0) > 0.01 ? 'red.500' : 'green.500'} fontWeight="semibold">{formatNumber(row.DIFF_AMT)}</Td>
                           <Td>
-                            <Badge colorScheme={row.MATCH_STATUS === 'ONLY_IN_BASE' ? 'orange' : row.MATCH_STATUS === 'ONLY_IN_VIEW' ? 'purple' : 'red'} fontSize="xs">
+                            <Badge colorScheme={row.MATCH_STATUS === 'ONLY_IN_BASE' ? 'orange' : row.MATCH_STATUS === 'ONLY_IN_VIEW' ? 'purple' : 'red'} fontSize="xs" borderRadius="md">
                               {row.MATCH_STATUS}
                             </Badge>
                           </Td>
@@ -523,7 +522,7 @@ function SnowflakeModule({ onLaunchCorrection }) {
                     { label: 'Faltan en Snowflake', value: analysisData.summary?.missingInSnowflake?.length ?? 0 },
                   ].map((card) => (
                     <GridItem key={card.label}>
-                      <Box borderWidth="1px" borderRadius="xl" p={4} bg={subtleBg}>
+                      <Box borderWidth="1px" borderRadius="lg" p={4} bg={subtleBg}>
                         <Stat>
                           <StatLabel fontSize="sm" color={useColorModeValue('gray.500','gray.300')}>{card.label}</StatLabel>
                           <StatNumber fontSize="2xl">{card.value}</StatNumber>
@@ -544,7 +543,7 @@ function SnowflakeModule({ onLaunchCorrection }) {
                     ]
                       .filter((entry) => entry.data && entry.data.length)
                       .map((entry) => (
-                        <Tag key={entry.label} size="lg" colorScheme="red" borderRadius="full" px={4} py={2}>
+                        <Tag key={entry.label} size="lg" colorScheme="red" borderRadius="lg" px={3} py={1.5}>
                           {entry.label}: {entry.data.length}
                         </Tag>
                       ))}
@@ -611,8 +610,8 @@ function SnowflakeModule({ onLaunchCorrection }) {
           <DrawerFooter borderTopWidth="1px" justifyContent="space-between">
             <Text fontSize="xs" color={textSecondary}>Usa este panel para identificar líneas antes de corregirlas.</Text>
             <HStack>
-              <Button variant="outline" onClick={closeAnalysis}>Cerrar</Button>
-              <Button colorScheme="purple" leftIcon={<HiPencilAlt />} onClick={() => { if (analysisTarget && onLaunchCorrection) { onLaunchCorrection(analysisTarget); closeAnalysis(); } }} isDisabled={!analysisTarget || !onLaunchCorrection}>Ir a Corrección</Button>
+              <Button variant="outline" onClick={closeAnalysis} borderRadius="lg">Cerrar</Button>
+              <Button colorScheme="purple" leftIcon={<HiPencilAlt />} onClick={() => { if (analysisTarget && onLaunchCorrection) { onLaunchCorrection(analysisTarget); closeAnalysis(); } }} isDisabled={!analysisTarget || !onLaunchCorrection} borderRadius="lg">Ir a Corrección</Button>
             </HStack>
           </DrawerFooter>
         </DrawerContent>

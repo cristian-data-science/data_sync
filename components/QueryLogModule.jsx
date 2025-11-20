@@ -173,10 +173,11 @@ export default function QueryLogModule() {
   const textPrimary = useColorModeValue('gray.800', 'gray.100');
   const textSecondary = useColorModeValue('gray.600', 'gray.300');
   const textMuted = useColorModeValue('gray.500', 'gray.400');
+  const borderCol = useColorModeValue('gray.200', 'gray.700');
 
   if (logsQuery.isLoading && !logsQuery.data) {
     return (
-      <Box bg={cardBg} borderRadius="2xl" shadow="md" p={12} textAlign="center">
+      <Box bg={cardBg} borderRadius="lg" shadow="sm" p={12} textAlign="center">
         <VStack spacing={4}>
           <Spinner size="xl" color="purple.500" thickness="4px" />
           <Text fontSize="lg" fontWeight="semibold" color={textPrimary}>Cargando historial de Snowflake...</Text>
@@ -188,15 +189,15 @@ export default function QueryLogModule() {
 
   return (
     <VStack align="stretch" spacing={6}>
-      <Box bg={cardBg} borderRadius="2xl" shadow="md" p={6} borderWidth="1px" borderColor={useColorModeValue('gray.100','gray.700')}>
+      <Box bg={cardBg} borderRadius="lg" shadow="sm" p={6} borderWidth="1px" borderColor={borderCol}>
         <Stack direction={{ base: 'column', md: 'row' }} spacing={4} align="start">
           <InputGroup maxW="320px">
             <InputLeftAddon fontWeight="semibold" bg={useColorModeValue('gray.50', 'gray.700')} color={textPrimary}>SalesId</InputLeftAddon>
-            <Input placeholder="PAT-000000" value={formFilters.salesId} onChange={(event) => setFormFilters((prev) => ({ ...prev, salesId: event.target.value }))} />
+            <Input placeholder="PAT-000000" value={formFilters.salesId} onChange={(event) => setFormFilters((prev) => ({ ...prev, salesId: event.target.value }))} borderRadius="lg" />
           </InputGroup>
           <InputGroup maxW="220px">
             <InputLeftAddon fontWeight="semibold" bg={useColorModeValue('gray.50', 'gray.700')} color={textPrimary}>Tipo</InputLeftAddon>
-            <Select value={formFilters.actionType} onChange={(event) => setFormFilters((prev) => ({ ...prev, actionType: event.target.value }))}>
+            <Select value={formFilters.actionType} onChange={(event) => setFormFilters((prev) => ({ ...prev, actionType: event.target.value }))} borderRadius="lg">
               <option value="">Todos</option>
               <option value="sql">SQL ejecutado</option>
               <option value="rollback">Rollback manual</option>
@@ -204,24 +205,24 @@ export default function QueryLogModule() {
             </Select>
           </InputGroup>
           <HStack spacing={3}>
-            <Button colorScheme="purple" onClick={handleApplyFilters} isLoading={logsQuery.isFetching}>Buscar</Button>
-            <Button variant="ghost" onClick={handleClearFilters}>Limpiar</Button>
+            <Button colorScheme="purple" onClick={handleApplyFilters} isLoading={logsQuery.isFetching} borderRadius="lg">Buscar</Button>
+            <Button variant="ghost" onClick={handleClearFilters} borderRadius="lg">Limpiar</Button>
             <Tooltip label="Refrescar">
-              <IconButton aria-label="Recalcular" icon={<HiRefresh />} onClick={() => logsQuery.refetch()} isLoading={logsQuery.isRefetching} />
+              <IconButton aria-label="Recalcular" icon={<HiRefresh />} onClick={() => logsQuery.refetch()} isLoading={logsQuery.isRefetching} borderRadius="lg" />
             </Tooltip>
           </HStack>
         </Stack>
       </Box>
 
-      <Box bg={cardBg} borderRadius="2xl" shadow="md" p={6} borderWidth="1px" borderColor={useColorModeValue('gray.100','gray.700')}>
+      <Box bg={cardBg} borderRadius="lg" shadow="sm" p={6} borderWidth="1px" borderColor={borderCol}>
         <HStack justify="space-between" align={{ base: 'stretch', md: 'center' }} flexWrap="wrap" gap={3}>
           <Box>
             <Text fontWeight="bold" color={textPrimary}>{total ? `Mostrando ${startRow}-${endRow} de ${total} registros` : 'Sin registros'}</Text>
             {total > 0 && <Text fontSize="xs" color={textMuted}>Última actualización: {new Date(logsQuery.data?.timestamp || Date.now()).toLocaleString('es-AR')}</Text>}
           </Box>
           <HStack spacing={2}>
-            <Button leftIcon={<HiArrowNarrowLeft />} onClick={handlePrevPage} isDisabled={page === 0 || logsQuery.isFetching}>Anterior</Button>
-            <Button rightIcon={<HiArrowNarrowRight />} onClick={handleNextPage} isDisabled={!hasNext || logsQuery.isFetching}>Siguiente</Button>
+            <Button leftIcon={<HiArrowNarrowLeft />} onClick={handlePrevPage} isDisabled={page === 0 || logsQuery.isFetching} borderRadius="lg">Anterior</Button>
+            <Button rightIcon={<HiArrowNarrowRight />} onClick={handleNextPage} isDisabled={!hasNext || logsQuery.isFetching} borderRadius="lg">Siguiente</Button>
           </HStack>
         </HStack>
       </Box>
@@ -231,9 +232,9 @@ export default function QueryLogModule() {
       )}
 
       {logsQuery.isLoading ? (
-        <Box bg={cardBg} borderRadius="2xl" shadow="md" p={8} textAlign="center"><Text color={textSecondary}>Cargando historial...</Text></Box>
+        <Box bg={cardBg} borderRadius="lg" shadow="sm" p={8} textAlign="center"><Text color={textSecondary}>Cargando historial...</Text></Box>
       ) : logs.length === 0 ? (
-        <Box bg={cardBg} borderRadius="2xl" shadow="md" p={8} textAlign="center">
+        <Box bg={cardBg} borderRadius="lg" shadow="sm" p={8} textAlign="center">
           <Text fontWeight="semibold" color={textPrimary}>No hay logs con los filtros actuales</Text>
           <Text fontSize="sm" color={textMuted} mt={2}>Ejecuta un script o ajusta los filtros para ver el historial.</Text>
         </Box>
@@ -244,14 +245,14 @@ export default function QueryLogModule() {
             const badgeColor = ACTION_COLORS[log.actionType] || 'gray';
             const hasRollback = Boolean(log.rollbackSql && log.rollbackSql.trim() && log.rollbackSql.trim() !== '-- N/A');
             return (
-              <Box key={log.logId} borderWidth="1px" borderRadius="2xl" p={6} bg={cardBg} shadow="sm">
+              <Box key={log.logId} borderWidth="1px" borderRadius="lg" p={6} bg={cardBg} shadow="sm">
                 <HStack justify="space-between" align="start" flexWrap="wrap" gap={3}>
                   <Box>
                     <Text fontSize="sm" fontWeight="bold" color={textPrimary}>Log #{log.logId}</Text>
                     <Text fontSize="sm" color={textSecondary} mt={1}>{buildLogDescription(log)}</Text>
                     <Text fontSize="xs" color={textMuted}>{new Date(log.executedAt).toLocaleString('es-AR')}</Text>
                   </Box>
-                  <Badge colorScheme={badgeColor}>{actionLabel}</Badge>
+                  <Badge colorScheme={badgeColor} borderRadius="md">{actionLabel}</Badge>
                 </HStack>
                 <Grid templateColumns={{ base: 'repeat(1, 1fr)', md: 'repeat(4, 1fr)' }} gap={3} mt={4} fontSize="sm">
                   <GridItem>
@@ -275,20 +276,20 @@ export default function QueryLogModule() {
                   <Box flex={1}>
                     <HStack justify="space-between" mb={2}>
                       <Text fontSize="xs" fontWeight="bold" color={textSecondary}>SQL ejecutado</Text>
-                      <Button size="xs" leftIcon={<HiClipboardCopy />} onClick={() => copyText(log.executedSql, toast, 'SQL')}>Copiar</Button>
+                      <Button size="xs" leftIcon={<HiClipboardCopy />} onClick={() => copyText(log.executedSql, toast, 'SQL')} borderRadius="md">Copiar</Button>
                     </HStack>
                     <Code display="block" whiteSpace="pre-wrap" fontSize="xs" p={3} borderRadius="md" bg={useColorModeValue('gray.900','gray.800')} color={useColorModeValue('green.100','green.100')}>{log.executedSql || '—'}</Code>
                   </Box>
                   <Box flex={1}>
                     <HStack justify="space-between" mb={2}>
                       <Text fontSize="xs" fontWeight="bold" color={textSecondary}>Rollback almacenado</Text>
-                      <Button size="xs" variant="outline" leftIcon={<HiClipboardCopy />} onClick={() => copyText(log.rollbackSql, toast, 'Rollback')} isDisabled={!hasRollback}>Copiar</Button>
+                      <Button size="xs" variant="outline" leftIcon={<HiClipboardCopy />} onClick={() => copyText(log.rollbackSql, toast, 'Rollback')} isDisabled={!hasRollback} borderRadius="md">Copiar</Button>
                     </HStack>
                     <Code display="block" whiteSpace="pre-wrap" fontSize="xs" p={3} borderRadius="md" bg={useColorModeValue('gray.800','gray.700')} color={useColorModeValue('orange.100','orange.100')}>{log.rollbackSql || 'No disponible'}</Code>
                   </Box>
                 </Stack>
                 <ButtonGroup size="sm" spacing={3} mt={6} flexWrap="wrap">
-                  <Button colorScheme="orange" leftIcon={<HiShieldCheck />} onClick={() => setPendingRollback(log)} isDisabled={!hasRollback || rollbackMutation.isLoading} isLoading={executingRollbackId === log.logId && rollbackMutation.isLoading} loadingText="Ejecutando">
+                  <Button colorScheme="orange" leftIcon={<HiShieldCheck />} onClick={() => setPendingRollback(log)} isDisabled={!hasRollback || rollbackMutation.isLoading} isLoading={executingRollbackId === log.logId && rollbackMutation.isLoading} loadingText="Ejecutando" borderRadius="lg">
                     Ejecutar rollback
                   </Button>
                 </ButtonGroup>
@@ -300,7 +301,7 @@ export default function QueryLogModule() {
 
       <AlertDialog isOpen={Boolean(pendingRollback)} leastDestructiveRef={cancelRef} onClose={() => (!(rollbackMutation.isLoading || dialogSubmitting) ? setPendingRollback(null) : null)} isCentered>
         <AlertDialogOverlay>
-          <AlertDialogContent position="relative" overflow="hidden">
+          <AlertDialogContent position="relative" overflow="hidden" borderRadius="lg">
             {(rollbackMutation.isLoading || dialogSubmitting) && (
               <Box position="absolute" inset={0} bg="whiteAlpha.800" display="flex" flexDirection="column" alignItems="center" justifyContent="center" zIndex={1}>
                 <Spinner size="lg" color="orange.400" thickness="4px" />
@@ -313,8 +314,8 @@ export default function QueryLogModule() {
               <Text fontSize="sm" color={textMuted}>El backend ejecutará el SQL de rollback directamente en Snowflake usando las mismas credenciales.</Text>
             </AlertDialogBody>
             <AlertDialogFooter opacity={rollbackMutation.isLoading || dialogSubmitting ? 0.4 : 1} pointerEvents={rollbackMutation.isLoading || dialogSubmitting ? 'none' : 'auto'}>
-              <Button ref={cancelRef} onClick={() => setPendingRollback(null)} disabled={rollbackMutation.isLoading || dialogSubmitting}>Cancelar</Button>
-              <Button colorScheme="orange" onClick={handleConfirmRollback} ml={3} isLoading={rollbackMutation.isLoading || dialogSubmitting}>Sí, ejecutar rollback</Button>
+              <Button ref={cancelRef} onClick={() => setPendingRollback(null)} disabled={rollbackMutation.isLoading || dialogSubmitting} borderRadius="lg">Cancelar</Button>
+              <Button colorScheme="orange" onClick={handleConfirmRollback} ml={3} isLoading={rollbackMutation.isLoading || dialogSubmitting} borderRadius="lg">Sí, ejecutar rollback</Button>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialogOverlay>

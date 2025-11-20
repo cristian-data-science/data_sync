@@ -226,37 +226,35 @@ export default function DataCorrectionModule({ salesId: initialSalesId = '', onP
 
   const cardBg = useColorModeValue('white', 'gray.800');
   const subtleBg = useColorModeValue('gray.50', 'gray.700');
-  const borderCol = useColorModeValue('gray.100', 'gray.700');
-  const borderColStrong = useColorModeValue('gray.200', 'gray.600');
+  const borderCol = useColorModeValue('gray.200', 'gray.700');
   const textPrimary = useColorModeValue('gray.800', 'gray.100');
-  const textSecondary = useColorModeValue('gray.600', 'gray.300');
   const textMuted = useColorModeValue('gray.500', 'gray.400');
 
   return (
     <VStack align="stretch" spacing={6}>
-      <Box bg={cardBg} borderRadius="2xl" shadow="md" p={8} borderWidth="1px" borderColor={borderCol}>
+      <Box bg={cardBg} borderRadius="lg" shadow="sm" p={6} borderWidth="1px" borderColor={borderCol}>
         <HStack justify="space-between" align="start">
           <Box>
             <Heading size="md" color={textPrimary}>Corrección asistida de datos</Heading>
             <Text fontSize="sm" color={textMuted}>Genera scripts de inserción o edición basados en las diferencias detectadas.</Text>
           </Box>
-          <Badge colorScheme="purple" borderRadius="full" px={4} py={1.5} fontSize="sm">Beta</Badge>
+          <Badge colorScheme="purple" borderRadius="lg" px={3} py={1} fontSize="xs">Beta</Badge>
         </HStack>
         <Stack direction={{ base: 'column', md: 'row' }} spacing={4} mt={6}>
           <InputGroup maxW="360px">
             <InputLeftAddon bg={useColorModeValue('gray.50', 'gray.700')} color={textPrimary} fontWeight="semibold">SalesId</InputLeftAddon>
-            <Input placeholder="PAT-000000" value={salesId} onChange={(event) => setSalesId(event.target.value)} autoFocus />
+            <Input placeholder="PAT-000000" value={salesId} onChange={(event) => setSalesId(event.target.value)} autoFocus borderRadius="lg" />
           </InputGroup>
           <HStack spacing={3}>
-            <Button colorScheme="purple" leftIcon={<HiLightningBolt />} onClick={runAnalysis} isLoading={isFetching}>Generar scripts</Button>
+            <Button colorScheme="purple" leftIcon={<HiLightningBolt />} onClick={runAnalysis} isLoading={isFetching} borderRadius="lg">Generar scripts</Button>
             {isFetched && (
               <Tooltip label="Recalcular con los mismos datos">
-                <IconButton aria-label="Recalcular" icon={<HiRefresh />} onClick={runAnalysis} isLoading={isFetching} />
+                <IconButton aria-label="Recalcular" icon={<HiRefresh />} onClick={runAnalysis} isLoading={isFetching} borderRadius="lg" />
               </Tooltip>
             )}
           </HStack>
         </Stack>
-        <Alert status="info" mt={6} borderRadius="xl">
+        <Alert status="info" mt={6} borderRadius="lg">
           <AlertIcon />
           Los scripts no se ejecutan automáticamente. Debes darle a ejecutar SQL o ROLLBACK
         </Alert>
@@ -271,7 +269,7 @@ export default function DataCorrectionModule({ salesId: initialSalesId = '', onP
               { label: 'Última generación', value: new Date(corrections.generatedAt).toLocaleString('es-AR'), color: 'purple' },
             ].map((card) => (
               <GridItem key={card.label}>
-                <Box borderWidth="1px" borderRadius="xl" p={5} bg={cardBg}>
+                <Box borderWidth="1px" borderRadius="lg" p={5} bg={cardBg}>
                   <Text fontSize="xs" color={`${card.color}.500`} textTransform="uppercase" fontWeight="bold">{card.label}</Text>
                   <Text fontSize="2xl" fontWeight="bold" color={textPrimary}>{card.label === 'Última generación' ? card.value : Number(card.value).toLocaleString('es-AR')}</Text>
                 </Box>
@@ -280,7 +278,7 @@ export default function DataCorrectionModule({ salesId: initialSalesId = '', onP
           </Grid>
 
           {!!corrections.summary && (
-            <Box borderWidth="1px" borderRadius="xl" p={5} bg={cardBg}>
+            <Box borderWidth="1px" borderRadius="lg" p={5} bg={cardBg}>
               <Heading size="sm" color={textPrimary} mb={4}>Resumen técnico</Heading>
               <Grid templateColumns={{ base: 'repeat(1, 1fr)', md: 'repeat(2, 1fr)' }} gap={4} fontSize="sm">
                 <GridItem>
@@ -303,7 +301,7 @@ export default function DataCorrectionModule({ salesId: initialSalesId = '', onP
             </Box>
           )}
 
-          <Accordion allowMultiple borderRadius="xl" borderWidth="1px" bg={cardBg}>
+          <Accordion allowMultiple borderRadius="lg" borderWidth="1px" bg={cardBg}>
             {[
               { key: 'inserts', title: 'Inserciones sugeridas', color: 'green', badgeLabel: 'INSERT', items: corrections.inserts || [] },
               { key: 'updates', title: 'Correcciones (UPDATE)', color: 'orange', badgeLabel: 'UPDATE', items: corrections.updates || [] },
@@ -322,7 +320,7 @@ export default function DataCorrectionModule({ salesId: initialSalesId = '', onP
                         {!hasItems && <Text fontSize="xs" color={textMuted} mt={1}>No se sugiere esta sección</Text>}
                         {hasItems && !actionableCount && <Text fontSize="xs" color={textMuted} mt={1}>Sin scripts ejecutables (solo avisos)</Text>}
                       </Box>
-                      <Badge colorScheme={badgeColor} mr={3}>{badgeLabel}</Badge>
+                      <Badge colorScheme={badgeColor} mr={3} borderRadius="md">{badgeLabel}</Badge>
                       <AccordionIcon color={textPrimary} />
                     </AccordionButton>
                   </h2>
@@ -349,7 +347,7 @@ export default function DataCorrectionModule({ salesId: initialSalesId = '', onP
                       </VStack>
                     ) : (
                       <Box borderWidth="1px" borderRadius="lg" p={4} bg={subtleBg}>
-                        <Text fontSize="sm" color={textSecondary}>No hay acciones recomendadas para esta sección.</Text>
+                        <Text fontSize="sm" color={textMuted}>No hay acciones recomendadas para esta sección.</Text>
                       </Box>
                     )}
                   </AccordionPanel>
@@ -359,7 +357,7 @@ export default function DataCorrectionModule({ salesId: initialSalesId = '', onP
           </Accordion>
 
           {stats.inserts === 0 && stats.updates === 0 && (
-            <Box borderWidth="1px" borderRadius="xl" p={6} bg={cardBg} textAlign="center">
+            <Box borderWidth="1px" borderRadius="lg" p={6} bg={cardBg} textAlign="center">
               <Text fontWeight="semibold" color={textPrimary}>No se generaron scripts para este SalesId</Text>
               <Text fontSize="sm" color={textMuted} mt={2}>El pedido luce consistente entre OData y Snowflake.</Text>
             </Box>
@@ -368,39 +366,39 @@ export default function DataCorrectionModule({ salesId: initialSalesId = '', onP
       )}
 
       {executionHistory.length > 0 && (
-        <Box bg={cardBg} borderRadius="2xl" shadow="md" p={6} borderWidth="1px" borderColor={borderCol}>
+        <Box bg={cardBg} borderRadius="lg" shadow="sm" p={6} borderWidth="1px" borderColor={borderCol}>
           <HStack justify="space-between" align="start" mb={4} flexWrap="wrap" gap={3}>
             <Box>
               <Heading size="sm" color={textPrimary}>Historial de scripts ejecutados (sesión actual)</Heading>
               <Text fontSize="xs" color={textMuted} mt={1}>Conservamos una copia de cada SQL y su rollback para que puedas revertir aunque ya no existan diferencias.</Text>
             </Box>
-            <Button size="sm" variant="outline" colorScheme="gray" onClick={() => setExecutionHistory([])}>Limpiar historial</Button>
+            <Button size="sm" variant="outline" colorScheme="gray" onClick={() => setExecutionHistory([])} borderRadius="lg">Limpiar historial</Button>
           </HStack>
           <VStack align="stretch" spacing={4}>
             {executionHistory.map((entry) => {
               const executedSql = entry.actionType === 'rollback' ? entry.statement.rollbackSql : entry.statement.sql;
               return (
-                <Box key={entry.id} borderWidth="1px" borderRadius="xl" p={5} bg={subtleBg}>
+                <Box key={entry.id} borderWidth="1px" borderRadius="lg" p={5} bg={subtleBg}>
                   <HStack justify="space-between" align="start" flexWrap="wrap" gap={3}>
                     <Box>
                       <Text fontSize="sm" fontWeight="bold" color={textPrimary}>{entry.statement.preview?.salesLinePk || entry.statement.entryId || `Línea ${entry.statement.lineNumber ?? '?'}`}</Text>
                       <Text fontSize="xs" color={textMuted}>Ejecutado el {new Date(entry.executedAt).toLocaleString('es-AR')}</Text>
                     </Box>
-                    <Badge colorScheme={entry.actionType === 'rollback' ? 'orange' : 'purple'} alignSelf="flex-start">{entry.actionType === 'rollback' ? 'Rollback' : 'SQL aplicado'}</Badge>
+                    <Badge colorScheme={entry.actionType === 'rollback' ? 'orange' : 'purple'} alignSelf="flex-start" borderRadius="md">{entry.actionType === 'rollback' ? 'Rollback' : 'SQL aplicado'}</Badge>
                   </HStack>
                   <Stack direction={{ base: 'column', md: 'row' }} spacing={4} mt={4}>
                     <Box flex="1">
                       <HStack justify="space-between" mb={2}>
-                        <Text fontSize="xs" fontWeight="semibold" color={textSecondary}>SQL ejecutado</Text>
-                        <Button size="xs" leftIcon={<HiClipboardCopy />} onClick={() => copyText(executedSql, toast)}>Copiar</Button>
+                        <Text fontSize="xs" fontWeight="semibold" color={textMuted}>SQL ejecutado</Text>
+                        <Button size="xs" leftIcon={<HiClipboardCopy />} onClick={() => copyText(executedSql, toast)} borderRadius="md">Copiar</Button>
                       </HStack>
                       <Code w="full" whiteSpace="pre-wrap" fontSize="xs" p={3} borderRadius="md" bg={useColorModeValue('gray.900','gray.800')} color={useColorModeValue('green.100','green.100')}>{executedSql}</Code>
                     </Box>
                     {entry.statement.rollbackSql && (
                       <Box flex="1">
                         <HStack justify="space-between" mb={2}>
-                          <Text fontSize="xs" fontWeight="semibold" color={textSecondary}>Rollback guardado</Text>
-                          <Button size="xs" variant="outline" leftIcon={<HiClipboardCopy />} onClick={() => copyText(entry.statement.rollbackSql, toast)}>Copiar</Button>
+                          <Text fontSize="xs" fontWeight="semibold" color={textMuted}>Rollback guardado</Text>
+                          <Button size="xs" variant="outline" leftIcon={<HiClipboardCopy />} onClick={() => copyText(entry.statement.rollbackSql, toast)} borderRadius="md">Copiar</Button>
                         </HStack>
                         <Code w="full" whiteSpace="pre-wrap" fontSize="xs" p={3} borderRadius="md" bg={useColorModeValue('gray.800','gray.700')} color={useColorModeValue('orange.100','orange.100')}>{entry.statement.rollbackSql}</Code>
                       </Box>
@@ -415,7 +413,7 @@ export default function DataCorrectionModule({ salesId: initialSalesId = '', onP
 
       <AlertDialog isOpen={Boolean(pendingAction)} leastDestructiveRef={cancelRef} onClose={() => (isExecuting ? null : setPendingAction(null))} isCentered>
         <AlertDialogOverlay>
-          <AlertDialogContent position="relative" overflow="hidden">
+          <AlertDialogContent position="relative" overflow="hidden" borderRadius="lg">
             {isExecuting && (
               <Box position="absolute" inset={0} bg="whiteAlpha.800" display="flex" flexDirection="column" alignItems="center" justifyContent="center" zIndex={1}>
                 <Spinner size="lg" color={pendingAction?.actionType === 'rollback' ? 'orange.400' : 'purple.400'} thickness="4px" />
@@ -428,8 +426,8 @@ export default function DataCorrectionModule({ salesId: initialSalesId = '', onP
               <Text fontSize="sm" color={textMuted}>Esta acción se ejecutará directamente en Snowflake usando la conexión del backend. Asegúrate de haber comunicado el cambio y de contar con una ventana operativa.</Text>
             </AlertDialogBody>
             <AlertDialogFooter opacity={isExecuting ? 0.4 : 1} pointerEvents={isExecuting ? 'none' : 'auto'}>
-              <Button ref={cancelRef} onClick={() => setPendingAction(null)} disabled={isExecuting}>Cancelar</Button>
-              <Button colorScheme={pendingAction?.actionType === 'rollback' ? 'orange' : 'purple'} onClick={executePendingAction} ml={3} isLoading={isExecuting}>{pendingAction?.actionType === 'rollback' ? 'Sí, ejecutar rollback' : 'Sí, ejecutar script'}</Button>
+              <Button ref={cancelRef} onClick={() => setPendingAction(null)} disabled={isExecuting} borderRadius="lg">Cancelar</Button>
+              <Button colorScheme={pendingAction?.actionType === 'rollback' ? 'orange' : 'purple'} onClick={executePendingAction} ml={3} isLoading={isExecuting} borderRadius="lg">{pendingAction?.actionType === 'rollback' ? 'Sí, ejecutar rollback' : 'Sí, ejecutar script'}</Button>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialogOverlay>
@@ -454,13 +452,13 @@ function StatementCard({ title, badge, statement, toast, activeSalesId, onExecut
   const subtleBg = useColorModeValue('gray.50', 'gray.700');
 
   return (
-    <Box borderWidth="1px" borderRadius="xl" p={5} shadow="sm" bg={cardBg}>
+    <Box borderWidth="1px" borderRadius="lg" p={5} shadow="sm" bg={cardBg}>
       <HStack justify="space-between" align="start">
         <Box>
           <Heading size="sm" color={textPrimary}>{title}</Heading>
           <Text fontSize="xs" color={textMuted} mt={1}>Línea {statement.lineNumber ?? '—'}</Text>
         </Box>
-        <Badge colorScheme={badge.color} variant="subtle">{badge.label}</Badge>
+        <Badge colorScheme={badge.color} variant="subtle" borderRadius="md">{badge.label}</Badge>
       </HStack>
       <VStack align="stretch" spacing={4} mt={4} fontSize="xs">
         <Box>
@@ -523,8 +521,8 @@ function StatementCard({ title, badge, statement, toast, activeSalesId, onExecut
           </Box>
         )}
         <ButtonGroup size="sm" spacing={3} mt={6} flexWrap="wrap">
-          <Button colorScheme="purple" leftIcon={<HiLightningBolt />} onClick={() => onExecute?.(statement)} isDisabled={!isActionable || disableActions} isLoading={isSqlLoading} loadingText="Ejecutando">Ejecutar SQL</Button>
-          <Button variant="outline" colorScheme="orange" onClick={() => onRollback?.(statement)} isDisabled={!hasRollback || disableActions || forceRollbackDisabled} isLoading={isRollbackLoading} loadingText="Rollback">Ejecutar rollback</Button>
+          <Button colorScheme="purple" leftIcon={<HiLightningBolt />} onClick={() => onExecute?.(statement)} isDisabled={!isActionable || disableActions} isLoading={isSqlLoading} loadingText="Ejecutando" borderRadius="lg">Ejecutar SQL</Button>
+          <Button variant="outline" colorScheme="orange" onClick={() => onRollback?.(statement)} isDisabled={!hasRollback || disableActions || forceRollbackDisabled} isLoading={isRollbackLoading} loadingText="Rollback" borderRadius="lg">Ejecutar rollback</Button>
         </ButtonGroup>
       </VStack>
     </Box>
