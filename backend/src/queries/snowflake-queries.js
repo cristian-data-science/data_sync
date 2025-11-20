@@ -252,6 +252,19 @@ const splitCsvValues = (value) => {
     .filter((token) => token.length > 0);
 };
 
+const truthyTokens = new Set(['true', '1', 'yes', 'on']);
+const falsyTokens = new Set(['false', '0', 'no', 'off']);
+
+const coerceBoolean = (value, defaultValue = false) => {
+  if (typeof value === 'boolean') return value;
+  const token = pickSingleValue(value);
+  if (!token) return defaultValue;
+  const normalized = token.toLowerCase();
+  if (truthyTokens.has(normalized)) return true;
+  if (falsyTokens.has(normalized)) return false;
+  return defaultValue;
+};
+
 const DEFAULT_VISTA_COLUMNS = [
   'ACCOUNTINGDATE',
   'SALESID',
@@ -289,6 +302,7 @@ const LINE_SOURCE_CONFIG = {
       expression: 'CAST(ACCOUNTINGDATE AS DATE)',
     },
     filters: [
+      { param: 'salesIdNonEmpty', column: 'SALESID', type: 'notEmpty', upper: true, defaultValue: true },
       { param: 'salesId', column: 'SALESID', type: 'text', match: 'contains', upper: true },
       { param: 'invoiceId', column: 'INVOICEID', type: 'text', match: 'contains', upper: true },
       { param: 'canal', column: 'GAPCANALDIMENSION', type: 'list', upper: true },
@@ -309,6 +323,7 @@ const LINE_SOURCE_CONFIG = {
       expression: 'TRY_TO_DATE(INVOICEDATE)',
     },
     filters: [
+      { param: 'salesIdNonEmpty', column: 'SALESID', type: 'notEmpty', upper: true, defaultValue: true },
       { param: 'salesId', column: 'SALESID', type: 'text', match: 'contains', upper: true },
       { param: 'invoiceId', column: 'INVOICEID', type: 'text', match: 'contains', upper: true },
     ],
@@ -372,6 +387,12 @@ export function buildLineDownloadQuery({ source = 'vista', limit, filters = {}, 
       whereClauses.push(`${columnExpr} IN (${placeholders})`);
       binds.push(...values);
       appliedFilters[filterDef.param] = values;
+    } else if (filterDef.type === 'notEmpty') {
+      const enabled = coerceBoolean(raw, filterDef.defaultValue === true);
+      if (!enabled) return;
+      const columnExpr = filterDef.upper ? `TRIM(UPPER(${filterDef.column}))` : `TRIM(${filterDef.column})`;
+      whereClauses.push(`NULLIF(${columnExpr}, '') IS NOT NULL`);
+      appliedFilters[filterDef.param] = true;
     }
   });
 

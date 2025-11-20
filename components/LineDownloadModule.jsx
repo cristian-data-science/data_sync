@@ -13,6 +13,7 @@ import {
   HStack,
   IconButton,
   Input,
+  Select,
   Spinner,
   Stat,
   StatHelpText,
@@ -35,13 +36,17 @@ import {
 } from '@chakra-ui/react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import * as XLSX from 'xlsx';
 import { HiCloudDownload, HiRefresh, HiSearch } from 'react-icons/hi';
-
-const DEFAULT_QUERY_LIMIT = '5000';
-const MAX_RENDERED_ROWS = 2000;
+import * as XLSX from 'xlsx';
 
 const api = axios.create({ baseURL: '/api' });
+
+const DEFAULT_QUERY_LIMIT = '';
+const MAX_RENDERED_ROWS = 750;
+const SALES_ID_MODE_OPTIONS = [
+  { value: 'non-empty', label: 'Distinto de vacío' },
+  { value: 'manual', label: 'Buscar manualmente' },
+];
 
 const SOURCE_CONFIG = {
   vista: {
@@ -52,11 +57,22 @@ const SOURCE_CONFIG = {
     dateField: 'ACCOUNTINGDATE',
     dateRange: { from: 'accountingDateFrom', to: 'accountingDateTo' },
     filters: [
-      { name: 'salesId', label: 'SalesId', type: 'text', placeholder: 'PAT-000000' },
       { name: 'accountingDateFrom', label: 'Fecha desde (ACCOUNTINGDATE)', type: 'date' },
       { name: 'accountingDateTo', label: 'Fecha hasta (ACCOUNTINGDATE)', type: 'date' },
-      { name: 'canal', label: 'GAPCANALDIMENSION', type: 'text', helper: 'Usa coma para múltiples canales' },
-      { name: 'sourceFlag', label: 'SOURCE_FLAG', type: 'text', helper: 'Valores separados por coma' },
+      {
+        name: 'sourceFlag',
+        label: 'SOURCE_FLAG',
+        type: 'text',
+        input: 'select',
+        options: ['BASE_4XX_5XX', 'LINES_400000', 'FALLBACK_400000'],
+      },
+      { name: 'salesId', label: 'SalesId', type: 'text', placeholder: 'PAT-000000' },
+      {
+        name: 'canal',
+        label: 'GAPCANALDIMENSION',
+        type: 'text',
+        helper: 'Usa coma para múltiples canales',
+      },
       { name: 'invoiceId', label: 'InvoiceId', type: 'text' },
     ],
   },
@@ -82,6 +98,7 @@ const buildInitialFilters = (source, previousLimit = DEFAULT_QUERY_LIMIT) => {
   config.filters.forEach(({ name }) => {
     base[name] = '';
   });
+  base.salesIdMode = 'non-empty';
   return base;
 };
 
@@ -96,11 +113,21 @@ const buildRequestParams = (filters, config) => {
       params[name] = value;
     }
   });
+  const salesIdMode = filters.salesIdMode || 'non-empty';
+  if (salesIdMode === 'non-empty') {
+    delete params.salesId;
+    params.salesIdNonEmpty = 'true';
+  } else {
+    params.salesIdNonEmpty = 'false';
+  }
   return params;
 };
 
 const numberFormatter = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 0 });
-const currencyFormatter = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const currencyFormatter = new Intl.NumberFormat('es-AR', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 
 const formatDate = (value) => {
   if (!value) return '—';
@@ -222,6 +249,15 @@ function LineDownloadModule() {
     setPendingFilters((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleSalesIdModeChange = (event) => {
+    const value = event?.target?.value ?? 'non-empty';
+    setPendingFilters((prev) => ({
+      ...prev,
+      salesIdMode: value,
+      ...(value === 'manual' ? {} : { salesId: '' }),
+    }));
+  };
+
   const validatePendingFilters = () => {
     const range = currentConfig.dateRange;
     if (!range) return true;
@@ -240,6 +276,21 @@ function LineDownloadModule() {
       return false;
     }
     return true;
+  };
+
+  const handleDownloadCsv = () => {
+    if (!validatePendingFilters()) return;
+
+    const params = buildRequestParams(pendingFilters, currentConfig);
+    if (showAllColumns) {
+      params.includeAllColumns = 'true';
+    }
+    params.format = 'csv';
+
+    const queryString = new URLSearchParams(params).toString();
+    const url = `/api/snowflake/lineas?${queryString}`;
+
+    window.open(url, '_blank');
   };
 
   const handleSearch = () => {
@@ -276,7 +327,12 @@ function LineDownloadModule() {
     const timestamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
     const fileName = `lineas-${resultConfig.id}-${timestamp}.xlsx`;
     XLSX.writeFile(workbook, fileName);
-    toast({ title: 'Archivo generado', description: `Descargaste ${rows.length} filas.`, status: 'success', duration: 3000 });
+    toast({
+      title: 'Archivo generado',
+      description: `Descargaste ${rows.length} filas.`,
+      status: 'success',
+      duration: 3000,
+    });
   };
 
   const rowsToRender = useMemo(() => rows.slice(0, MAX_RENDERED_ROWS), [rows]);
@@ -308,7 +364,12 @@ function LineDownloadModule() {
               )}
             </Box>
             <HStack spacing={3}>
-              <Button leftIcon={<HiSearch />} colorScheme="cyan" onClick={handleSearch} isLoading={isFetching && !hasPendingChanges && !!appliedFilters}>
+              <Button
+                leftIcon={<HiSearch />}
+                colorScheme="cyan"
+                onClick={handleSearch}
+                isLoading={isFetching && !hasPendingChanges && !!appliedFilters}
+              >
                 Buscar
               </Button>
               <IconButton
@@ -327,11 +388,7 @@ function LineDownloadModule() {
           <VStack align="stretch" spacing={3}>
             <ButtonGroup size="sm" variant="ghost" colorScheme="cyan">
               {Object.values(SOURCE_CONFIG).map((option) => (
-                <Button
-                  key={option.id}
-                  onClick={() => handleSourceChange(option.id)}
-                  isActive={pendingFilters.source === option.id}
-                >
+                <Button key={option.id} onClick={() => handleSourceChange(option.id)} isActive={pendingFilters.source === option.id}>
                   {option.label}
                 </Button>
               ))}
@@ -340,8 +397,65 @@ function LineDownloadModule() {
               {currentConfig.description}
             </Text>
             <Wrap spacing={4}>
-              <WrapItem>
-                <FormControl minW="140px">
+              {currentConfig.filters.map((filter) => (
+                filter.name === 'salesId' ? (
+                  <WrapItem key={filter.name} minW="260px">
+                    <FormControl>
+                      <FormLabel fontSize="xs">{filter.label}</FormLabel>
+                      <Select value={pendingFilters.salesIdMode} onChange={handleSalesIdModeChange} mb={2}>
+                        {SALES_ID_MODE_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </Select>
+                      <Input
+                        type="text"
+                        value={pendingFilters[filter.name]}
+                        placeholder={filter.placeholder}
+                        onChange={handleFilterChange(filter.name)}
+                        isDisabled={pendingFilters.salesIdMode !== 'manual'}
+                      />
+                      <Text fontSize="xx-small" color={textSecondary} mt={1}>
+                        Usa "Buscar manualmente" para ingresar un pedido específico.
+                      </Text>
+                    </FormControl>
+                  </WrapItem>
+                ) : (
+                  <WrapItem key={filter.name}>
+                    <FormControl minW="170px">
+                      <FormLabel fontSize="xs">{filter.label}</FormLabel>
+                      {filter.input === 'select' ? (
+                        <Select
+                          placeholder="Selecciona una opción"
+                          value={pendingFilters[filter.name]}
+                          onChange={handleFilterChange(filter.name)}
+                        >
+                          {filter.options?.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </Select>
+                      ) : (
+                        <Input
+                          type={filter.type === 'date' ? 'date' : 'text'}
+                          value={pendingFilters[filter.name]}
+                          placeholder={filter.placeholder}
+                          onChange={handleFilterChange(filter.name)}
+                        />
+                      )}
+                      {filter.helper && (
+                        <Text fontSize="xx-small" color={textSecondary} mt={1}>
+                          {filter.helper}
+                        </Text>
+                      )}
+                    </FormControl>
+                  </WrapItem>
+                )
+              ))}
+              <WrapItem key="limit">
+                <FormControl minW="160px">
                   <FormLabel fontSize="xs">Límite de filas</FormLabel>
                   <Input
                     type="number"
@@ -351,28 +465,10 @@ function LineDownloadModule() {
                     onChange={handleFilterChange('limit')}
                   />
                   <Text fontSize="xx-small" color={textSecondary} mt={1}>
-                    Por defecto se limitan {DEFAULT_QUERY_LIMIT} filas. Vacío = sin límite (respuesta pesada).
+                    Completa sólo si querés limitar la respuesta. Vacío = sin límite (puede ser pesado).
                   </Text>
                 </FormControl>
               </WrapItem>
-              {currentConfig.filters.map((filter) => (
-                <WrapItem key={filter.name}>
-                  <FormControl minW="170px">
-                    <FormLabel fontSize="xs">{filter.label}</FormLabel>
-                    <Input
-                      type={filter.type === 'date' ? 'date' : 'text'}
-                      value={pendingFilters[filter.name]}
-                      placeholder={filter.placeholder}
-                      onChange={handleFilterChange(filter.name)}
-                    />
-                    {filter.helper && (
-                      <Text fontSize="xx-small" color={textSecondary} mt={1}>
-                        {filter.helper}
-                      </Text>
-                    )}
-                  </FormControl>
-                </WrapItem>
-              ))}
             </Wrap>
             <HStack spacing={6}>
               <FormControl display="flex" alignItems="center" w="auto">
@@ -394,6 +490,9 @@ function LineDownloadModule() {
               <Button onClick={handleResetFilters} size="sm" variant="ghost">
                 Restablecer
               </Button>
+              <Button onClick={handleDownloadCsv} colorScheme="green" size="sm" leftIcon={<HiCloudDownload />}>
+                Descargar CSV
+              </Button>
               <Button onClick={handleSearch} colorScheme="cyan" size="sm" isDisabled={!hasPendingChanges && !!appliedFilters}>
                 Aplicar filtros
               </Button>
@@ -412,10 +511,7 @@ function LineDownloadModule() {
             },
             {
               label: 'Monto total',
-              value:
-                summaryStats.totalAmount === null
-                  ? '—'
-                  : currencyFormatter.format(summaryStats.totalAmount),
+              value: summaryStats.totalAmount === null ? '—' : currencyFormatter.format(summaryStats.totalAmount),
               help: resultConfig.amountField,
             },
             {
@@ -462,7 +558,15 @@ function LineDownloadModule() {
           </VStack>
         ) : rows.length ? (
           <>
-            <HStack justify="space-between" px={6} py={4} borderBottomWidth="1px" borderColor={borderCol} flexWrap="wrap" gap={3}>
+            <HStack
+              justify="space-between"
+              px={6}
+              py={4}
+              borderBottomWidth="1px"
+              borderColor={borderCol}
+              flexWrap="wrap"
+              gap={3}
+            >
               <HStack>
                 <Heading size="sm">Resultado</Heading>
                 <Badge colorScheme="cyan">{rows.length} filas</Badge>
